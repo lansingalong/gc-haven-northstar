@@ -5245,6 +5245,112 @@ window.addEventListener('message', function(e) {
     cpSubTab('overview');
     setTimeout(function() { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
+
+  if (e.data.type === 'HAVEN_ADD_CARE_GAP') {
+    var gapOpportunity = e.data.opportunity || 'Care Gap';
+    var gapGoal = e.data.goal || gapOpportunity;
+    var gapCategory = e.data.category || 'Care Coordination';
+    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    var list = document.getElementById('cp-ogi-list');
+    if (!list) return;
+
+    var card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--border);border-radius:4px;margin-top:14px;overflow:hidden;animation:havenGoalIn 300ms ease-out both;';
+    card.innerHTML =
+      '<style>@keyframes havenGoalIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}</style>' +
+      '<div style="display:flex;align-items:flex-start;padding:12px 14px 10px;gap:16px;border-bottom:1px solid var(--border-light);">' +
+        '<div style="flex:0 0 200px;display:flex;flex-direction:column;gap:3px;">' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#E07820;border-radius:3px;flex-shrink:0;">' +
+              '<span class="material-icons" style="font-size:13px;color:#fff;">edit_note</span>' +
+            '</span>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Opportunity</span>' +
+          '</div>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;padding-left:28px;">' + gapOpportunity + '</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + gapGoal + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 130px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal Group</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + gapCategory + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Condition</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:20px;padding:8px 14px;border-bottom:1px solid var(--border-light);background:#fafafa;">' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Select</label>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">' +
+          '<span style="font-weight:600;">Eligibility</span>' +
+          '<span style="display:inline-flex;align-items:center;gap:3px;color:#2e7d32;font-weight:600;"><span class="material-icons" style="font-size:14px;color:#2e7d32;">check_circle</span> Active</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;margin-left:8px;">' +
+          '<span class="material-icons" style="font-size:16px;color:#005d9f;">auto_awesome</span>' +
+          '<span style="font-weight:700;color:#005d9f;">Added by AI</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto;">' +
+          '<span style="font-weight:600;color:var(--text-secondary);">Priority</span>' +
+          '<select style="height:26px;border:1px solid var(--border);border-radius:3px;padding:0 18px 0 6px;font-size:12px;font-family:var(--font);outline:none;appearance:none;background:white url(\'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'10\\\' height=\\\'10\\\' viewBox=\\\'0 0 24 24\\\'%3E%3Cpath fill=\\\'%23888\\\' d=\\\'M7 10l5 5 5-5z\\\'/%3E%3C/svg%3E\') no-repeat right 4px center;color:#E07820;font-weight:700;cursor:pointer;"><option>High</option><option>Medium</option><option>Low</option></select>' +
+        '</div>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;border:1px solid var(--border);border-radius:3px;padding:3px 10px;">' +
+          '<input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Sign Off' +
+        '</label>' +
+      '</div>' +
+      '<div style="padding:10px 14px 6px;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:3px;">Intervention</div>' +
+        '<div style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + gapGoal + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0;padding:8px 14px;border-top:1px solid var(--border-light);flex-wrap:wrap;">' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Status</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">In Progress</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Plan</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">I will work with my care manager to achieve this goal.</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Start Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Target Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created On</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created By</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Beatrice Kanya</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:6px 14px 12px;border-top:1px solid var(--border-light);">' +
+        '<a href="#" style="color:var(--link);display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;text-decoration:none;">' +
+          '<span class="material-icons" style="font-size:15px;">info_outline</span> Additional Information' +
+        '</a>' +
+      '</div>';
+
+    list.insertBefore(card, list.firstChild);
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var cpNav3 = document.querySelector('.gc-left-item[data-left="care-plan"]');
+    if (cpNav3) cpNav3.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var cpPanel3 = document.getElementById('panel-care-plan');
+    if (cpPanel3) { cpPanel3.style.display = ''; cpPanel3.classList.add('active'); }
+    cpTier1Tab('team');
+    cpSubTab('overview');
+    setTimeout(function() { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+  }
 });
 
 </script>
