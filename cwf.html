@@ -5031,6 +5031,38 @@ window.addEventListener('message', function(e) {
     if (oaPanel) { oaPanel.style.display = ''; oaPanel.classList.add('active'); }
   }
 
+  // Navigate to Activity Record → Notes sub-tab
+  if (e.data.type === 'HAVEN_NAVIGATE_NOTES') {
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var arNavN = document.querySelector('.gc-left-item[data-left="activity-record"]');
+    if (arNavN) arNavN.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var arPanelN = document.getElementById('panel-activity-record');
+    if (arPanelN) { arPanelN.style.display = ''; arPanelN.classList.add('active'); }
+    document.querySelectorAll('#activityTabs .gc-tab').forEach(function(t) { t.classList.remove('active'); t.style.color = ''; t.style.borderBottomColor = ''; });
+    document.querySelectorAll('.ar-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var nTab = document.querySelector('#activityTabs .gc-tab[data-artab="notes"]');
+    if (nTab) { nTab.classList.add('active'); nTab.style.color = 'var(--teal)'; nTab.style.borderBottomColor = 'var(--teal)'; }
+    var nPanel = document.getElementById('artab-notes');
+    if (nPanel) { nPanel.style.display = ''; nPanel.classList.add('active'); }
+  }
+
+  // Navigate to Activity Record → Activity Summary sub-tab
+  if (e.data.type === 'HAVEN_NAVIGATE_ACTIVITY_SUMMARY') {
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var arNav2 = document.querySelector('.gc-left-item[data-left="activity-record"]');
+    if (arNav2) arNav2.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var arPanel2 = document.getElementById('panel-activity-record');
+    if (arPanel2) { arPanel2.style.display = ''; arPanel2.classList.add('active'); }
+    document.querySelectorAll('#activityTabs .gc-tab').forEach(function(t) { t.classList.remove('active'); t.style.color = ''; t.style.borderBottomColor = ''; });
+    document.querySelectorAll('.ar-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var asTab = document.querySelector('#activityTabs .gc-tab[data-artab="activity-summary"]');
+    if (asTab) { asTab.classList.add('active'); asTab.style.color = 'var(--teal)'; asTab.style.borderBottomColor = 'var(--teal)'; }
+    var asPanel = document.getElementById('artab-activity-summary');
+    if (asPanel) { asPanel.style.display = ''; asPanel.classList.add('active'); }
+  }
+
   // Navigate to Care Plan left panel → Care Plan Overview sub-tab
   if (e.data.type === 'HAVEN_NAVIGATE_CARE_PLAN') {
     document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
