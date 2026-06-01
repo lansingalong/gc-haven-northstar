@@ -16,6 +16,7 @@ export interface CarePlanItem {
   condition: string
   targetDate: string
   status: string
+  dueLabel?: string
   startDate: string
   preference: string
   task: string
@@ -67,6 +68,7 @@ export const mockCarePlan: CarePlanItem[] = [
     condition: 'Type 2 Diabetes Mellitus (E11.9)',
     targetDate: '2024-06-30',
     status: 'In Progress',
+    dueLabel: 'Due in 10 days',
     startDate: '2024-01-18',
     preference: 'Phone contact preferred',
     task: 'Schedule DSME enrollment by 05/01/2024',
@@ -127,6 +129,7 @@ export const mockCarePlan: CarePlanItem[] = [
     condition: 'Essential Hypertension (I10)',
     targetDate: '2024-09-30',
     status: 'In Progress',
+    dueLabel: 'Due in 1 day',
     startDate: '2024-01-18',
     preference: 'Phone contact preferred',
     task: 'Blood pressure recheck at PCP visit 03/25/2024',
@@ -164,6 +167,7 @@ export const mockCarePlan: CarePlanItem[] = [
     condition: 'Obesity (E66.09)',
     targetDate: '2024-06-30',
     status: 'In Progress',
+    dueLabel: 'Last adjusted 29 days ago',
     startDate: '2024-01-18',
     preference: 'Phone contact preferred',
     task: 'Follow up on exercise adherence at next check-in',
@@ -209,7 +213,32 @@ export const mockCarePlan: CarePlanItem[] = [
     careStaffComments: 'Last PHQ-9 score was 6 (mild). Due for annual re-screen.',
     memberComments: '',
     priority: 'Medium',
-    term: 'Ongoing',
+    term: 'Short-term',
+    barriers: [],
+    strengths: [],
+  },
+  {
+    eligibility: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
+    category: 'Diabetes Management',
+    opportunity: 'DSME Enrollment',
+    opportunityAlias: 'DSME Enrollment',
+    goal: 'Enroll in Diabetes Self-Management Education program',
+    goalAlias: 'DSME Goal',
+    intervention: 'Provide DSME program information and complete enrollment referral',
+    interventionAlias: 'DSME Referral',
+    memberPlan: 'Member will attend DSME orientation session',
+    condition: 'Type 2 Diabetes Mellitus (E11.9)',
+    targetDate: '2024-04-01',
+    status: 'Completed',
+    startDate: '2024-01-18',
+    preference: 'Phone contact preferred',
+    task: 'DSME enrollment confirmed',
+    memberGoal: 'I want to learn more about managing my diabetes',
+    memberStatus: 'Completed',
+    careStaffComments: 'Member enrolled in DSME as of 03/05/2024.',
+    memberComments: '',
+    priority: 'High',
+    term: 'Short-term',
     barriers: [],
     strengths: [],
   },

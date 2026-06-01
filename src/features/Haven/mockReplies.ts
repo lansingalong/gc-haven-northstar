@@ -211,6 +211,7 @@ const CARE_GAP_TERMS = [
   'preventive', 'preventive care', 'prevention',
   'wellness visit', 'annual wellness', 'awv', 'annual visit',
   'eye exam', 'retinal exam', 'diabetic eye', 'ophthalmology',
+  'foot exam', 'foot care', 'foot check', 'diabetic foot', 'podiatry', 'podiatrist', 'due for a foot',
   'star rating', 'star measure', 'hedis gap',
   'what screenings', 'what preventive', 'screening due',
   'what is he missing', 'what is she missing', 'what is henry missing',
@@ -228,7 +229,7 @@ const VISIT_TERMS = [
   'upcoming visit', 'upcoming appointment', 'next appointment', 'next visit',
   'scheduled visit', 'scheduled appointment',
   // ER / hospital
-  'er ', 'e.r.', 'emergency room', 'emergency visit', 'emergency department', 'ed visit',
+  ' er ', 'e.r.', 'emergency room', 'emergency visit', 'emergency department', 'ed visit',
   'hospital', 'hospitalization', 'hospitalizations', 'inpatient', 'admitted', 'admission',
   'discharge', 'discharged', 'readmission', 'readmitted',
   'hospital stay', 'hospital stays', 'inpatient stay',
@@ -245,12 +246,12 @@ const VISIT_TERMS = [
   'when did he last see', 'when did she last see', 'when did henry last see',
   'when was his last visit', 'when was her last visit',
   'when was his last appointment', 'when was her last appointment',
-  'has he been to the er', 'has she been to the er',
+  'has he been to the er', 'has she been to the er', 'any er visits', 'recent er visit',
   'has he been hospitalized', 'has she been hospitalized',
   'any recent er', 'any hospital', 'any recent hospital',
   'did he go to the hospital', 'did she go to the hospital',
   'was he admitted', 'was she admitted',
-  'encounter', 'encounters', 'claims history', 'service history',
+  'encounter', 'encounters', 'claim', 'claims', 'claims history', 'latest claims', 'recent claims', 'service history',
   'when did he see dr', 'when did she see dr',
   'has he seen anyone', 'has she seen anyone',
 ]
@@ -282,6 +283,7 @@ const CARE_PLAN_TERMS = [
   'member status on', 'member status',
   'what is he working on', 'what is she working on',
   'what has been done for him', 'what has been done for her',
+  'ogi', 'ogis', 'opportunity goal intervention', 'short-term ogi', 'short term ogi',
 ]
 
 const PROGRAM_TERMS = [
@@ -307,6 +309,7 @@ const PROGRAM_TERMS = [
   'can he be enrolled', 'can she be enrolled', 'should he be enrolled',
   'should she be enrolled', 'initiate enrollment', 'start enrollment',
   'disenroll', 'unenroll', 'discharge from program',
+  'what services is this member eligible for', 'services is this member eligible', 'what services is he eligible', 'what services is she eligible', 'services eligible for',
 ]
 
 const ASSESSMENT_TERMS = [
@@ -447,7 +450,7 @@ const CONTACT_TERMS = [
   'what is his phone', 'what is her phone', "what's his phone", "what's her phone",
   'how do i get in touch', 'how can i reach',
   'last contact', 'last successful contact', 'last time we talked',
-  'last outreach', 'outreach attempt', 'missed call', 'no answer',
+  'missed call', 'no answer',
   'fax', 'fax number',
 ]
 
@@ -524,20 +527,34 @@ const HEALTH_INDICATOR_TERMS = [
   'bnp', 'hemoglobin', 'recorded indicator',
 ]
 
+const CONSENT_TERMS = [
+  'consent', 'consented', 'consents',
+  'consent on file', 'consent form', 'consent status',
+  'has consent', 'signed consent', 'consent signed',
+  'authorization for home', 'ltss authorization', 'home services authorization',
+  'authorized for', 'authorization status', 'check authorization',
+]
+
 const PRECALL_SUMMARY_TERMS = [
   'before calling', 'what i need before', 'need before calling',
   'summarize what i need', 'need before i call',
+  'prep me', 'prepare me', 'prep for an outreach', 'prep for a follow-up',
 ]
 
 const OUTREACH_SUMMARY_TERMS = [
   'outreach attempts', 'summarize my outreach', 'outreach summary',
   'my outreach attempts', 'summarize outreach',
+  'outreach attempt', 'document an outreach', 'document outreach',
+  'when was the last outreach', 'document a outreach',
+  'is this case overdue', 'overdue for a follow-up', 'case overdue', 'overdue for follow',
+  'follow-up overdue', 'when was the last outreach attempt',
 ]
 
 const CATCHUP_TERMS = [
   'catch-up since', 'catch up since', 'since last conversation',
   'since our last conversation', 'since last call', 'since last contact',
   'since we last spoke', 'since we last talked',
+  'catch me up', 'since last outreach',
 ]
 
 const CLINICAL_CHANGES_TERMS = [
@@ -547,7 +564,33 @@ const CLINICAL_CHANGES_TERMS = [
 
 const CARE_PLAN_REVIEW_TERMS = [
   'care plan review', 'summarize a care plan', 'care plan review for',
-  'care plan progress', 'review of the care plan',
+  'care plan progress', 'review of the care plan', "review member's", 'review the care plan',
+]
+
+const DOCUMENT_TERMS = [
+  'smart goal',
+  'help me make a', 'help me write a', 'help me create a',
+  'help me document an opportunity', 'help me document an ogi',
+  'help me document an intervention',
+  'document an opportunity, goal',
+]
+
+const URAC_TERMS = [
+  'urac',
+  'urac compliance',
+  'missing for urac',
+]
+
+const LAST_UPDATE_TERMS = [
+  'show me the last update',
+  'last update i did',
+  'last update for the member',
+  'my last update',
+  'what did i last do',
+  'what was my last',
+  'last thing i did',
+  'last activity i did',
+  'last note i did',
 ]
 
 /* ─── Follow-up suggestions ─────────────────────────────────────────────────── */
@@ -588,7 +631,15 @@ export function getFollowUpQuery(input: string): string {
 /* ─── Summarize-prompt replies (default member Henry) ───────────────────── */
 
 function getPreCallSummaryReply(first: string): string {
-  return `Before calling ${first}, here's what you need to know:\n\n• Risk level: Moderate-High (Tier 3) — uncontrolled T2DM, Hypertension, CKD Stage G2\n• A1C: 7.8% — trending up from 7.2% (Aug 2023). Key talking point: dietary habits and medication adherence\n• BP: 138/88 — mildly elevated. Confirm home monitoring and Lisinopril adherence\n• Open care gaps: Retinal exam overdue, preventive screenings outstanding\n• Transportation barrier: Confirm he has a ride to PCP visit (03/25/2024)\n• Missed call: 03/10/2024 (morning — no answer). Try afternoon window\n• DPP enrollment opportunity — eligible but not enrolled\n• PHQ-9 re-screen due — last score within normal range\n\nBest contact time: afternoon. Number: (909) 851-3064.`
+  const shortTermOGIs = mockCarePlan.filter(c => c.term === 'Short-term')
+  const ogiLines = shortTermOGIs.map(c => {
+    const done = c.status === 'Completed' || c.status === 'Closed'
+    const checkbox = done ? '☑' : '☐'
+    const status = done ? ' (addressed)' : c.status === 'Pending' ? ' (not started)' : ' (in progress)'
+    return `${checkbox} ${c.opportunity}: ${c.goal}${status}`
+  }).join('\n')
+
+  return `Here's what you need to know before calling ${first}:\n\nCURRENT HEALTH STATE\n• Risk: Moderate-High (Tier 3) — T2DM, Hypertension, CKD Stage G2\n• A1C: 7.8% (Feb 2024) — above goal (<7.0%) ⚠️\n• BP: 138/88 — mildly elevated, above target\n• eGFR: 74 — Stage G2 CKD, stable\n• Meds: Metformin, Lisinopril, Atorvastatin, Aspirin, Albuterol\n• Care gaps: Retinal exam overdue, preventive screenings outstanding\n\nCHANGES SINCE LAST CALL (02/20/2024)\n• A1C up from 7.2% → 7.8% — trending in wrong direction ⚠️\n• Missed call attempt 03/10/2024 (morning — no answer)\n• PCP visit 03/25/2024 scheduled — confirm transportation\n• No new hospitalizations or ER visits\n• DPP enrollment still open — eligible but not enrolled\n\nSHORT-TERM OGIs\n${ogiLines}\n\nBest contact time: afternoon. Number: (909) 851-3064.`
 }
 
 function getOutreachSummaryReply(first: string): string {
@@ -605,9 +656,18 @@ function getClinicalChangesReply(first: string): string {
 
 function getCarePlanReviewReply(first: string): string {
   const active = mockCarePlan.filter(c => c.status !== 'Closed')
-  const goalLines = active.map(c =>
-    `• [${c.status}] ${c.goal} — target ${fmtDate(c.targetDate)}`
-  ).join('\n')
+
+  const clinicalInterventionLabels = ['Due in 10 days', 'Due in 1 day', 'Last adjusted 29 days ago', 'Due in 10 days']
+  const memberActionLabels = ['Due in 1 day', 'Last adjusted 29 days ago', 'Due in 10 days', 'Due in 1 day']
+
+  const goalLines = active.map((c, i) => {
+    if (c.status === 'Completed') return `• [Completed] ${c.goal} — target ${fmtDate(c.targetDate)}`
+    if (c.status === 'Pending') return `• [Pending] ${c.goal} — target ${fmtDate(c.targetDate)}`
+    const ciLabel = clinicalInterventionLabels[i % clinicalInterventionLabels.length]
+    const maLabel = memberActionLabels[i % memberActionLabels.length]
+    return `• ${c.goal} — target ${fmtDate(c.targetDate)}\n  Clinical intervention: ${ciLabel}\n  Member action: ${maLabel}`
+  }).join('\n')
+
   return `Care plan review for ${first}:\n\n${goalLines}\n\nOpen care gaps:\n• Retinal exam overdue\n• Preventive screenings outstanding\n\nActive barriers:\n• Transportation — no personal vehicle, relies on family\n• Food insecurity — skipping meals 2–3×/week impacting dietary goals\n\nPrograms:\n• DSME — enrolled\n• DPP — eligible, not enrolled\n\nRecommended focus: Advance glycemic control goal (A1C trending up), close retinal exam gap, and discuss DPP enrollment.`
 }
 
@@ -931,6 +991,10 @@ function getContactReply(first: string): string {
   return `Contact preferences for ${first}:\n\n• Preferred phone: ${preferred?.phoneNumber ?? 'N/A'}\n• Best time to call: ${preferred?.bestTimeToCall ?? 'N/A'}\n• Alternate phone: ${alternate?.phoneNumber ?? 'N/A'}\n• Preferred written language: ${mockMemberDetail.preferredWrittenLanguages.join(', ')}\n• Communication impairments: ${impairments}\n\nLast successful contact: 02/20/2024\nMissed call attempt: 03/10/2024 (morning — no answer)\n\nRecommend calling within the preferred window for best reach.`
 }
 
+function getConsentReply(first: string): string {
+  return `${first}'s consent status:\n\n• Program consent: ✓ On file — signed 01/08/2024\n  Covers: Care management participation, release of clinical information to care team\n• ROI (Release of Information): ✓ On file — signed 01/08/2024\n• HIPAA authorization: ✓ Acknowledged\n• Care plan agreement: ✓ Signed at last care plan review\n\nAll required consents are current. No additional consent forms are outstanding at this time.`
+}
+
 function getEligibilityReply(first: string): string {
   const primary = mockEligibility.eligibilities.find(e => e.status === 'Active')
   const secondary = mockEligibility.eligibilities.filter(e => e !== primary)
@@ -951,6 +1015,16 @@ function getRiskReply(first: string): string {
 
 function getHealthIndicatorReply(first: string): string {
   return `${first}'s last recorded health indicators (02/01/2024):\n\nKey clinical values:\n• HbA1c: 7.8% ⚠️ — above goal (<7.0%), trending up from 7.2% (Aug 2023)\n• Blood Pressure: 138/88 mmHg — mildly elevated\n• eGFR: 74 mL/min/1.73m² — Stage G2 CKD, stable\n• Weight: 192 lbs | BMI: 28.4 — overweight range\n• O₂ Saturation: 98% — within normal limits\n• LDL Cholesterol: 112 mg/dL — borderline high\n\nMost concerning indicator: rising HbA1c trend (+0.6% over 6 months). Recommend medication adherence review and dietary consultation at next contact.`
+}
+
+function getDocumentReply(first: string): string {
+  const shortTermOGIs = mockCarePlan.filter(c => c.term === 'Short-term' && c.status !== 'Completed' && c.status !== 'Closed')
+  const openGoal = shortTermOGIs[0]
+  return `Here are documentation tools for ${first}:\n\nSMART Goal (template):\n• Specific: ${first} will [action] related to [condition]\n• Measurable: [metric, e.g., HbA1c <7.0%, BP <130/80]\n• Achievable: Based on current engagement level and clinical picture\n• Relevant: Addresses [care gap or clinical priority]\n• Time-bound: To be achieved by [target date]\n\nSuggested SMART goal:\n"${first} will take Metformin 1000mg twice daily as prescribed and complete a follow-up HbA1c lab by 06/30/2024, with the goal of achieving HbA1c <7.5%."\n\nOpen short-term OGI to document:\n${openGoal ? `• Opportunity: ${openGoal.opportunity}\n  Goal: ${openGoal.goal}\n  Intervention: ${openGoal.intervention}\n  Status: ${openGoal.status} · Target: ${fmtDate(openGoal.targetDate)}` : '• All short-term OGIs are current.'}\n\nWould you like to document an outreach attempt or update the care plan?`
+}
+
+function getUracReply(first: string): string {
+  return `URAC compliance review for ${first}:\n\n✓ Completed:\n• Initial assessment (HRA) — completed 02/2024\n• Care plan established — signed 01/08/2024\n• Consent on file — signed 01/08/2024\n• Member outreach documented — 3+ contacts in last 6 months\n• Medication reconciliation — last 01/18/2024\n\n⚠️ Outstanding:\n• PHQ-9 re-screen — annual screen overdue (last score 6, Nov 2023)\n• Care plan review — 90-day update due (last review 01/2024)\n• Follow-up documentation for open care gaps — retinal exam and preventive screenings\n\nNext required action: Administer PHQ-9 at next contact and document care plan review. Recommend scheduling a 90-day care plan review to maintain URAC Case Management standards.`
 }
 
 /* ─── Lisa Thompson reply functions ─────────────────────────────────────────── */
@@ -1066,6 +1140,10 @@ function getLisaContactReply(first: string): string {
   return `Contact preferences for ${first}:\n\n• Preferred phone: ${preferred?.phoneNumber ?? 'N/A'}\n• Best time to call: ${preferred?.bestTimeToCall ?? 'N/A'}\n• Alternate phone: ${alternate?.phoneNumber ?? 'N/A'}\n• Preferred written language: ${lisaMemberDetail.preferredWrittenLanguages.join(', ')}\n• Communication impairments: ${impairments}\n\nLast successful contact: 03/10/2024\n\nRecommend calling within the preferred morning window. Member may have difficulty hearing — speak clearly and confirm understanding.`
 }
 
+function getLisaConsentReply(first: string): string {
+  return `${first}'s consent and authorization status:\n\n• Program consent: ✓ On file — signed 12/28/2023 (post-discharge intake)\n  Covers: Care management participation, release of clinical information to care team\n• ROI (Release of Information): ✓ On file — signed 12/28/2023\n• HIPAA authorization: ✓ Acknowledged\n• LTSS home services authorization:\n  - Personal care aide (6 hrs/week): ✓ Authorized through 12/31/2024\n  - Homemaker services (2 hrs/week): ✓ Authorized through 12/31/2024\n  - Home health aide visits: ✓ Authorized — 3 visits/week\n• Care plan agreement: ✓ Signed at care plan review 01/15/2024\n\nAll required consents and LTSS authorizations are current. No additional forms outstanding.`
+}
+
 function getLisaEligibilityReply(first: string): string {
   const primary = lisaEligibility.eligibilities.find(e => e.status === 'Active')
   const secondary = lisaEligibility.eligibilities.filter(e => e !== primary)
@@ -1112,12 +1190,25 @@ function getLisaCarePlanReviewReply(first: string): string {
   return `Care plan review for ${first}:\n\n${goalLines}\n\nOpen care gaps:\n• Flu vaccine (priority — high-risk member)\n• Diabetic eye exam overdue\n• Depression follow-up required\n• Kidney health evaluation pending\n\nActive barriers:\n• Social isolation — widowed, lives alone\n• Anxiety around medical appointments\n\nPrograms:\n• DSNP Care Coordination — active\n• CHF Disease Management — active\n• Cardiac Rehabilitation — eligible, not enrolled\n\nRecommended focus: CHF fluid management, close flu vaccine gap, PHQ-9 re-screen, and discuss cardiac rehabilitation.`
 }
 
+function getLisaDocumentReply(first: string): string {
+  const openGoal = lisaCarePlan.filter(c => c.term === 'Short-term' && c.status !== 'Completed' && c.status !== 'Closed')[0]
+  return `Here are documentation tools for ${first}:\n\nSMART Goal (template):\n• Specific: ${first} will [action] related to [condition]\n• Measurable: [metric, e.g., weight stable within 2 lbs/day, A1C <7.5%]\n• Achievable: Based on current engagement level and clinical picture\n• Relevant: Addresses [care gap or clinical priority]\n• Time-bound: To be achieved by [target date]\n\nSuggested SMART goal:\n"${first} will weigh herself daily and report any weight gain of 2+ lbs within 24 hours to her care team, with the goal of preventing CHF readmission through 06/30/2024."\n\nOpen short-term OGI to document:\n${openGoal ? `• Opportunity: ${openGoal.opportunity}\n  Goal: ${openGoal.goal}\n  Intervention: ${openGoal.intervention}\n  Status: ${openGoal.status} · Target: ${fmtDate(openGoal.targetDate)}` : '• All short-term OGIs are current.'}\n\nWould you like to document an outreach attempt or update the care plan?`
+}
+
+function getLisaUracReply(first: string): string {
+  return `URAC compliance review for ${first}:\n\n✓ Completed:\n• Initial assessment (HRA) — completed 03/2024 (post-discharge)\n• Care plan established — signed 01/15/2024\n• Consent on file — signed 12/28/2023\n• Member outreach documented — 4 contacts in last 4 months\n• Medication reconciliation — last 03/10/2024\n• Post-hospitalization follow-up — completed within 72 hours ✓\n\n⚠️ Outstanding:\n• GAD-7 screen — not yet administered (anxiety diagnosis on file)\n• Care plan 90-day review — next due by 04/15/2024\n• Flu vaccine follow-up — open care gap; high-risk member\n• Depression follow-up documentation — PHQ-9 score 9, requires clinical note\n\nNext required action: Administer GAD-7 at next contact and complete 90-day care plan review. Document flu vaccine conversation. All LTSS authorizations are current through 12/31/2024.`
+}
+
 function getLisaReply(q: string, first: string): string {
+  if (matches(q, LAST_UPDATE_TERMS))       return getLisaLastUpdateReply(first)
   if (matches(q, PRECALL_SUMMARY_TERMS))   return getLisaPreCallSummaryReply(first)
   if (matches(q, OUTREACH_SUMMARY_TERMS))  return getLisaOutreachSummaryReply(first)
   if (matches(q, CATCHUP_TERMS))           return getLisaCatchUpReply(first)
   if (matches(q, CLINICAL_CHANGES_TERMS))  return getLisaClinicalChangesReply(first)
   if (matches(q, CARE_PLAN_REVIEW_TERMS))  return getLisaCarePlanReviewReply(first)
+  if (matches(q, DOCUMENT_TERMS))          return getLisaDocumentReply(first)
+  if (matches(q, URAC_TERMS))              return getLisaUracReply(first)
+  if (matches(q, ASSESSMENT_TERMS)) return getLisaAssessmentReply(first)
   if (matches(q, RISK_TERMS)) return getLisaRiskReply(first)
   if (matches(q, HEALTH_INDICATOR_TERMS)) return getLisaHealthIndicatorReply(first)
   if (matches(q, ALLERGY_TERMS)) return getLisaAllergyReply(first)
@@ -1128,12 +1219,12 @@ function getLisaReply(q: string, first: string): string {
   if (matches(q, SDOH_TERMS)) return getLisaSdohReply(first)
   if (matches(q, IMMUNIZATION_TERMS)) return getLisaImmunizationReply(first)
   if (matches(q, CARE_GAP_TERMS)) return getLisaCareGapReply(first)
-  if (matches(q, ASSESSMENT_TERMS)) return getLisaAssessmentReply(first)
   if (matches(q, CARE_PLAN_TERMS)) return getLisaCarePlanReply(first)
   if (matches(q, PROGRAM_TERMS)) return getLisaProgramReply(first)
   if (matches(q, VISIT_TERMS)) return getLisaVisitReply(first)
   if (matches(q, ELIGIBILITY_TERMS)) return getLisaEligibilityReply(first)
   if (matches(q, CONTACT_TERMS)) return getLisaContactReply(first)
+  if (matches(q, CONSENT_TERMS)) return getLisaConsentReply(first)
   if (matches(q, DIAGNOSIS_TERMS)) return getLisaDxReply(first)
   if (matches(q, MEMBER_DETAIL_TERMS)) return getLisaMemberDetailReply(first)
   return getGeneralFallback(q, first, true)
@@ -1279,12 +1370,25 @@ function getRobertCarePlanReviewReply(first: string): string {
   return `Care plan review for ${first}:\n\n${goalLines}\n\nOpen care gaps:\n• Diabetic Eye Exam (HEDIS)\n• Kidney Health Evaluation (uACR)\n\nActive barriers:\n• Sedentary work schedule — limits physical activity and meal consistency\n\nPrograms:\n• Chronic Disease Management — active\n• DSME — eligible, not enrolled\n\nRecommended focus: Close Diabetic Eye Exam and uACR gaps, confirm CPAP adherence, advance DSME enrollment conversation.`
 }
 
+function getRobertDocumentReply(first: string): string {
+  const openGoal = robertCarePlan.filter(c => c.term === 'Short-term' && c.status !== 'Completed' && c.status !== 'Closed')[0]
+  return `Here are documentation tools for ${first}:\n\nSMART Goal (template):\n• Specific: ${first} will [action] related to [condition]\n• Measurable: [metric, e.g., A1C <7.0%, BMI reduced by 1 point]\n• Achievable: Based on current engagement level and clinical picture\n• Relevant: Addresses [care gap or clinical priority]\n• Time-bound: To be achieved by [target date]\n\nSuggested SMART goal:\n"${first} will walk for 20 minutes at lunch break 3 days per week and complete the Diabetic Eye Exam by 06/30/2024, with the goal of achieving A1C <7.0%."\n\nOpen short-term OGI to document:\n${openGoal ? `• Opportunity: ${openGoal.opportunity}\n  Goal: ${openGoal.goal}\n  Intervention: ${openGoal.intervention}\n  Status: ${openGoal.status} · Target: ${fmtDate(openGoal.targetDate)}` : '• All short-term OGIs are current.'}\n\nWould you like to document an outreach attempt or update the care plan?`
+}
+
+function getRobertUracReply(first: string): string {
+  return `URAC compliance review for ${first}:\n\n✓ Completed:\n• Initial assessment (HRA) — completed 01/2024\n• Care plan established — signed 01/15/2024\n• Consent on file — signed 01/15/2024\n• Member outreach documented — 2 contacts in last 90 days\n• Medication reconciliation — last 02/20/2024\n• SDOH screening — completed 01/15/2024\n\n⚠️ Outstanding:\n• Care plan 90-day review — due by 04/15/2024\n• Diabetic Eye Exam documentation — open HEDIS gap, needs care gap closure note\n• Kidney Health Evaluation (uACR) — open HEDIS gap\n• CPAP adherence note — not yet documented in care plan\n\nNext required action: Schedule 90-day care plan review. Document CPAP adherence assessment and order uACR lab. All consents are current.`
+}
+
 function getRobertReply(q: string, first: string): string {
+  if (matches(q, LAST_UPDATE_TERMS))       return getRobertLastUpdateReply(first)
   if (matches(q, PRECALL_SUMMARY_TERMS))   return getRobertPreCallSummaryReply(first)
   if (matches(q, OUTREACH_SUMMARY_TERMS))  return getRobertOutreachSummaryReply(first)
   if (matches(q, CATCHUP_TERMS))           return getRobertCatchUpReply(first)
   if (matches(q, CLINICAL_CHANGES_TERMS))  return getRobertClinicalChangesReply(first)
   if (matches(q, CARE_PLAN_REVIEW_TERMS))  return getRobertCarePlanReviewReply(first)
+  if (matches(q, DOCUMENT_TERMS))          return getRobertDocumentReply(first)
+  if (matches(q, URAC_TERMS))              return getRobertUracReply(first)
+  if (matches(q, ASSESSMENT_TERMS))        return getRobertAssessmentReply(first)
   if (matches(q, RISK_TERMS))              return getRobertRiskReply(first)
   if (matches(q, HEALTH_INDICATOR_TERMS))  return getRobertHealthIndicatorReply(first)
   if (matches(q, ALLERGY_TERMS))           return getRobertAllergyReply(first)
@@ -1295,12 +1399,12 @@ function getRobertReply(q: string, first: string): string {
   if (matches(q, SDOH_TERMS))              return getRobertSdohReply(first)
   if (matches(q, IMMUNIZATION_TERMS))      return getRobertImmunizationReply(first)
   if (matches(q, CARE_GAP_TERMS))          return getRobertCareGapReply(first)
-  if (matches(q, ASSESSMENT_TERMS))        return getRobertAssessmentReply(first)
   if (matches(q, CARE_PLAN_TERMS))         return getRobertCarePlanReply(first)
   if (matches(q, PROGRAM_TERMS))           return getRobertProgramReply(first)
   if (matches(q, VISIT_TERMS))             return getRobertVisitReply(first)
   if (matches(q, ELIGIBILITY_TERMS))       return getRobertEligibilityReply(first)
   if (matches(q, CONTACT_TERMS))           return getRobertContactReply(first)
+  if (matches(q, CONSENT_TERMS))           return getConsentReply(first)
   if (matches(q, DIAGNOSIS_TERMS))         return getRobertDxReply(first)
   if (matches(q, MEMBER_DETAIL_TERMS))     return getRobertMemberDetailReply(first)
   return getGeneralFallbackRobert(q, first)
@@ -1479,12 +1583,25 @@ function getSarahCarePlanReviewReply(first: string): string {
   return `Care plan review for ${first}:\n\n${goalLines}\n\nOpen care gaps:\n• Flu vaccine (priority — high-risk member)\n• Diabetic eye exam overdue\n• Depression follow-up required (PHQ-9 score 12)\n• Kidney health evaluation (uACR)\n\nActive barriers:\n• Food insecurity — difficulty affording low-sodium, low-glycemic foods\n• Social isolation — divorced, lives alone\n\nPrograms:\n• Care Coordination — active\n• Chronic Disease Management — active\n• Behavioral Health Integration — active\n• Cardiac Rehabilitation — eligible, not enrolled\n\nRecommended focus: CHF readmission prevention, close flu vaccine gap, depression follow-up, and food assistance connection.`
 }
 
+function getSarahDocumentReply(first: string): string {
+  const openGoal = sarahCarePlan.filter(c => c.term === 'Short-term' && c.status !== 'Completed' && c.status !== 'Closed')[0]
+  return `Here are documentation tools for ${first}:\n\nSMART Goal (template):\n• Specific: ${first} will [action] related to [condition]\n• Measurable: [metric, e.g., daily weight within 2 lbs, PHQ-9 score <10]\n• Achievable: Based on current engagement level and clinical picture\n• Relevant: Addresses [care gap or clinical priority]\n• Time-bound: To be achieved by [target date]\n\nSuggested SMART goal:\n"${first} will weigh herself daily using a home scale and call her care manager if weight increases by 2+ lbs within 24 hours, with the goal of preventing CHF readmission through 06/30/2024."\n\nOpen short-term OGI to document:\n${openGoal ? `• Opportunity: ${openGoal.opportunity}\n  Goal: ${openGoal.goal}\n  Intervention: ${openGoal.intervention}\n  Status: ${openGoal.status} · Target: ${fmtDate(openGoal.targetDate)}` : '• All short-term OGIs are current.'}\n\nWould you like to document an outreach attempt or update the care plan?`
+}
+
+function getSarahUracReply(first: string): string {
+  return `URAC compliance review for ${first}:\n\n✓ Completed:\n• Initial assessment (HRA) — completed 02/2024 (post-discharge intake)\n• Care plan established — signed 01/25/2024\n• Consent on file — signed 01/25/2024\n• Member outreach documented — 4 contacts in last 90 days\n• Medication reconciliation — last 03/15/2024\n• Post-hospitalization follow-up — completed within 72 hours ✓\n• SDOH screening — completed 03/01/2024\n• Behavioral health intake — PHQ-9 administered 02/20/2024\n\n⚠️ Outstanding:\n• Depression follow-up note — PHQ-9 score 12 (moderate), clinical follow-up required within 30 days\n• Care plan 90-day review — next due by 04/25/2024\n• Flu vaccine documentation — open care gap\n• Food assistance referral follow-up — submitted 03/01/2024, no response yet\n\nNext required action: Document depression follow-up plan within 30 days of PHQ-9 score 12. Complete 90-day care plan review by 04/25/2024.`
+}
+
 function getSarahReply(q: string, first: string): string {
+  if (matches(q, LAST_UPDATE_TERMS))       return getSarahLastUpdateReply(first)
   if (matches(q, PRECALL_SUMMARY_TERMS))   return getSarahPreCallSummaryReply(first)
   if (matches(q, OUTREACH_SUMMARY_TERMS))  return getSarahOutreachSummaryReply(first)
   if (matches(q, CATCHUP_TERMS))           return getSarahCatchUpReply(first)
   if (matches(q, CLINICAL_CHANGES_TERMS))  return getSarahClinicalChangesReply(first)
   if (matches(q, CARE_PLAN_REVIEW_TERMS))  return getSarahCarePlanReviewReply(first)
+  if (matches(q, DOCUMENT_TERMS))          return getSarahDocumentReply(first)
+  if (matches(q, URAC_TERMS))              return getSarahUracReply(first)
+  if (matches(q, ASSESSMENT_TERMS))        return getSarahAssessmentReply(first)
   if (matches(q, RISK_TERMS))              return getSarahRiskReply(first)
   if (matches(q, HEALTH_INDICATOR_TERMS))  return getSarahHealthIndicatorReply(first)
   if (matches(q, ALLERGY_TERMS))           return getSarahAllergyReply(first)
@@ -1495,12 +1612,12 @@ function getSarahReply(q: string, first: string): string {
   if (matches(q, SDOH_TERMS))              return getSarahSdohReply(first)
   if (matches(q, IMMUNIZATION_TERMS))      return getSarahImmunizationReply(first)
   if (matches(q, CARE_GAP_TERMS))          return getSarahCareGapReply(first)
-  if (matches(q, ASSESSMENT_TERMS))        return getSarahAssessmentReply(first)
   if (matches(q, CARE_PLAN_TERMS))         return getSarahCarePlanReply(first)
   if (matches(q, PROGRAM_TERMS))           return getSarahProgramReply(first)
   if (matches(q, VISIT_TERMS))             return getSarahVisitReply(first)
   if (matches(q, ELIGIBILITY_TERMS))       return getSarahEligibilityReply(first)
   if (matches(q, CONTACT_TERMS))           return getSarahContactReply(first)
+  if (matches(q, CONSENT_TERMS))           return getConsentReply(first)
   if (matches(q, DIAGNOSIS_TERMS))         return getSarahDxReply(first)
   if (matches(q, MEMBER_DETAIL_TERMS))     return getSarahMemberDetailReply(first)
   return getGeneralFallbackSarah(q, first)
@@ -1678,12 +1795,25 @@ function getJamesCarePlanReviewReply(first: string): string {
   return `Care plan review for ${first}:\n\n${goalLines}\n\nOpen care gaps:\n• Flu vaccine (priority — COPD, age 71)\n• PCV20 Pneumococcal vaccine\n• DEXA scan (annual osteoporosis monitoring)\n• CAT score assessment (COPD functional test)\n• Statin therapy (cardiovascular risk — open HEDIS gap)\n\nActive barriers:\n• Complex 7-drug regimen — occasional missed doses\n\nPrograms:\n• Care Coordination — active\n• Chronic Disease Management — active\n• Pulmonary Rehabilitation — eligible, not enrolled\n• DSME — eligible, not enrolled\n\nRecommended focus: Apixaban adherence support (medication calendar), close flu/PCV20 gaps, pulmonary rehab enrollment.`
 }
 
+function getJamesDocumentReply(first: string): string {
+  const openGoal = jamesCarePlan.filter(c => c.term === 'Short-term' && c.status !== 'Completed' && c.status !== 'Closed')[0]
+  return `Here are documentation tools for ${first}:\n\nSMART Goal (template):\n• Specific: ${first} will [action] related to [condition]\n• Measurable: [metric, e.g., Apixaban taken 7/7 days, O₂ sat ≥95%]\n• Achievable: Based on current engagement level and clinical picture\n• Relevant: Addresses [care gap or clinical priority]\n• Time-bound: To be achieved by [target date]\n\nSuggested SMART goal:\n"${first} will use a medication calendar provided by care manager to take Apixaban 5mg twice daily without missing doses for 30 consecutive days, reducing stroke risk by 05/30/2024."\n\nOpen short-term OGI to document:\n${openGoal ? `• Opportunity: ${openGoal.opportunity}\n  Goal: ${openGoal.goal}\n  Intervention: ${openGoal.intervention}\n  Status: ${openGoal.status} · Target: ${fmtDate(openGoal.targetDate)}` : '• All short-term OGIs are current.'}\n\nWould you like to document an outreach attempt or update the care plan?`
+}
+
+function getJamesUracReply(first: string): string {
+  return `URAC compliance review for ${first}:\n\n✓ Completed:\n• Initial assessment (HRA) — completed 01/2024\n• Care plan established — signed 01/20/2024\n• Consent on file — signed 01/10/2024\n• Member outreach documented — 3 contacts in last 90 days\n• Medication reconciliation — last 02/14/2024\n• SDOH screening — completed 01/20/2024\n\n⚠️ Outstanding:\n• PHQ-9 re-screen — annual screen overdue (last Oct 2023, score 4)\n• Care plan 90-day review — due by 04/20/2024\n• CAT score assessment — COPD functional test overdue\n• DEXA scan — annual osteoporosis monitoring due\n• Flu vaccine and PCV20 — both open care gaps, required for high-risk COPD patient\n• Statin therapy documentation — open HEDIS gap, needs clinical note\n\nNext required action: Administer PHQ-9 at next contact, complete 90-day care plan review by 04/20/2024, and document CAT score assessment referral. Coordinate flu and PCV20 vaccines at next clinical encounter.`
+}
+
 function getJamesReply(q: string, first: string): string {
+  if (matches(q, LAST_UPDATE_TERMS))       return getJamesLastUpdateReply(first)
   if (matches(q, PRECALL_SUMMARY_TERMS))   return getJamesPreCallSummaryReply(first)
   if (matches(q, OUTREACH_SUMMARY_TERMS))  return getJamesOutreachSummaryReply(first)
   if (matches(q, CATCHUP_TERMS))           return getJamesCatchUpReply(first)
   if (matches(q, CLINICAL_CHANGES_TERMS))  return getJamesClinicalChangesReply(first)
   if (matches(q, CARE_PLAN_REVIEW_TERMS))  return getJamesCarePlanReviewReply(first)
+  if (matches(q, DOCUMENT_TERMS))          return getJamesDocumentReply(first)
+  if (matches(q, URAC_TERMS))              return getJamesUracReply(first)
+  if (matches(q, ASSESSMENT_TERMS))        return getJamesAssessmentReply(first)
   if (matches(q, RISK_TERMS))              return getJamesRiskReply(first)
   if (matches(q, HEALTH_INDICATOR_TERMS))  return getJamesHealthIndicatorReply(first)
   if (matches(q, ALLERGY_TERMS))           return getJamesAllergyReply(first)
@@ -1694,12 +1824,12 @@ function getJamesReply(q: string, first: string): string {
   if (matches(q, SDOH_TERMS))              return getJamesSdohReply(first)
   if (matches(q, IMMUNIZATION_TERMS))      return getJamesImmunizationReply(first)
   if (matches(q, CARE_GAP_TERMS))          return getJamesCareGapReply(first)
-  if (matches(q, ASSESSMENT_TERMS))        return getJamesAssessmentReply(first)
   if (matches(q, CARE_PLAN_TERMS))         return getJamesCarePlanReply(first)
   if (matches(q, PROGRAM_TERMS))           return getJamesProgramReply(first)
   if (matches(q, VISIT_TERMS))             return getJamesVisitReply(first)
   if (matches(q, ELIGIBILITY_TERMS))       return getJamesEligibilityReply(first)
   if (matches(q, CONTACT_TERMS))           return getJamesContactReply(first)
+  if (matches(q, CONSENT_TERMS))           return getConsentReply(first)
   if (matches(q, DIAGNOSIS_TERMS))         return getJamesDxReply(first)
   if (matches(q, MEMBER_DETAIL_TERMS))     return getJamesMemberDetailReply(first)
   return getGeneralFallbackJames(q, first)
@@ -1735,6 +1865,57 @@ function getGeneralFallbackJames(q: string, first: string): string {
 
 /* ─── Main export ───────────────────────────────────────────────────────────── */
 
+/* ─── Last update replies (per member) ─────────────────────────────────── */
+
+export interface LastUpdateData {
+  firstName: string
+  callDate: string
+  note: { date: string; author: string; role: string; body: string }
+  activity: { type: string; date: string; assignedTo: string; priority: string; status: string; due: string }
+}
+
+export function getLastUpdateData(memberName: string, mockMemberId: string): LastUpdateData {
+  const first = memberName.split(' ')[0]
+  if (mockMemberId === 'AH72940158') return buildLastUpdate(first, 'Lisa')
+  if (mockMemberId === 'AH36582091') return buildLastUpdate(first, 'Robert')
+  if (mockMemberId === 'AH91427634') return buildLastUpdate(first, 'Sarah')
+  if (mockMemberId === 'AH60273845') return buildLastUpdate(first, 'James')
+  return buildLastUpdate(first)
+}
+
+function buildLastUpdate(first: string, _variant?: string): LastUpdateData {
+  return {
+    firstName: first,
+    callDate: '03/20/2026',
+    note: {
+      date: '03/20/2026',
+      author: 'Sarah Mitchell, RN',
+      role: 'Care Manager',
+      body: `${first} reports increased fatigue and polyuria over the past two weeks. A1C of 8.4% indicates suboptimal glycemic control. Discussed medication adherence barriers — member occasionally forgets evening insulin dose. Reinforced consistent dosing schedule and provided written reminder tips. Will coordinate with PCP Dr. Chen for potential Metformin dosage adjustment.`,
+    },
+    activity: {
+      type: 'Follow Up Activity',
+      date: '03/27/2026',
+      assignedTo: 'Beatrice Kanya',
+      priority: 'High',
+      status: 'Accepted',
+      due: '03/27/2026',
+    },
+  }
+}
+
+export interface OpenGap { opportunity: string; description: string; goal: string; category: string }
+
+export function getOpenCareGaps(memberId: string): OpenGap[] {
+  const toGap = (g: { opportunity: string; opportunityStatus: string; opportunityDescription?: string; goal?: string; measureCategory?: string }) =>
+    ({ opportunity: g.opportunity, description: g.opportunityDescription ?? g.opportunity, goal: g.goal ?? '', category: g.measureCategory ?? 'Care Coordination' })
+  if (memberId === 'AH72940158') return lisaGapsInCare.filter(g => g.opportunityStatus === 'Open').map(toGap)
+  if (memberId === 'AH36582091') return robertGapsInCare.filter(g => g.opportunityStatus === 'Open').map(toGap)
+  if (memberId === 'AH91427634') return sarahGapsInCare.filter(g => g.opportunityStatus === 'Open').map(toGap)
+  if (memberId === 'AH60273845') return jamesGapsInCare.filter(g => g.opportunityStatus === 'Open').map(toGap)
+  return mockGapsInCare.filter(g => g.opportunityStatus === 'Open').map(toGap)
+}
+
 export function getMockReply(input: string, memberName: string, memberId = 'AH58319473'): string {
   const q = input.toLowerCase()
   const first = memberName.split(' ')[0]
@@ -1744,11 +1925,17 @@ export function getMockReply(input: string, memberName: string, memberId = 'AH58
   if (memberId === 'AH91427634') return getSarahReply(q, first)
   if (memberId === 'AH60273845') return getJamesReply(q, first)
 
+  if (matches(q, LAST_UPDATE_TERMS))      return getLastUpdateReply(first)
   if (matches(q, PRECALL_SUMMARY_TERMS))  return getPreCallSummaryReply(first)
   if (matches(q, OUTREACH_SUMMARY_TERMS)) return getOutreachSummaryReply(first)
   if (matches(q, CATCHUP_TERMS))          return getCatchUpReply(first)
   if (matches(q, CLINICAL_CHANGES_TERMS)) return getClinicalChangesReply(first)
   if (matches(q, CARE_PLAN_REVIEW_TERMS)) return getCarePlanReviewReply(first)
+  if (matches(q, DOCUMENT_TERMS))         return getDocumentReply(first)
+  if (matches(q, URAC_TERMS))             return getUracReply(first)
+
+  // Assessments — check before risk (health risk assessment overlap)
+  if (matches(q, ASSESSMENT_TERMS)) return getAssessmentReply(first)
 
   // Risk level
   if (matches(q, RISK_TERMS)) return getRiskReply(first)
@@ -1780,9 +1967,6 @@ export function getMockReply(input: string, memberName: string, memberId = 'AH58
   // Care gaps
   if (matches(q, CARE_GAP_TERMS)) return getCareGapReply(first)
 
-  // Assessments — check before programs/care plan
-  if (matches(q, ASSESSMENT_TERMS)) return getAssessmentReply(first)
-
   // Care plan
   if (matches(q, CARE_PLAN_TERMS)) return getCarePlanReply(first)
 
@@ -1797,6 +1981,9 @@ export function getMockReply(input: string, memberName: string, memberId = 'AH58
 
   // Contact
   if (matches(q, CONTACT_TERMS)) return getContactReply(first)
+
+  // Consent / authorization
+  if (matches(q, CONSENT_TERMS)) return getConsentReply(first)
 
   // Diagnoses (broad — check late to avoid false positives from condition-specific queries above)
   if (matches(q, DIAGNOSIS_TERMS)) return getDxReply(first)
