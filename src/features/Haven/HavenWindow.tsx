@@ -4,26 +4,106 @@ import { MemberHeader } from './MemberHeader'
 import { ChatWelcome } from './ChatWelcome'
 import { MemberDetailMenu } from './MemberDetailMenu'
 import { SummarizeMenu } from './SummarizeMenu'
-import { ChatMessages, type Message } from './ChatMessages'
+import { ComplianceMenu } from './ComplianceMenu'
+import { DocumentMenu } from './DocumentMenu'
+import { ChatMessages, type Message, type FollowUpChip } from './ChatMessages'
 import { AskHavenInput } from './AskHavenInput'
 import styles from './HavenWindow.module.css'
 import panelStyles from './HavenPanel.module.css'
-import { getMockReply, getFollowUp, getFollowUpQuery, getGuardrailMessage, getRecommendedActionsFromNote } from './mockReplies'
+import { getMockReply, getFollowUp, getFollowUpQuery, getGuardrailMessage, getRecommendedActionsFromNote, getLastUpdateData, getOpenCareGaps } from './mockReplies'
+import { type SmartGoalData } from './SmartGoalCard'
 import { HomeWelcome } from './HomeWelcome'
 import { MemberChatWindow } from './MemberChatWindow'
-import { SukiWindow } from './SukiWindow'
+import { SukiWindow, type Alert as SukiAlert } from './SukiWindow'
 import { ChatHistoryDrawer } from './ChatHistoryDrawer'
 import { PresetPromptsPanel } from './PresetPromptsPanel'
 import { RecommendedActionsCard } from './RecommendedActionsCard'
-import type { ActivityConfig } from './AddActivityModal'
+import { CallInsightsCard } from './CallInsightsCard'
+import { AddActivityModal, type ActivityConfig } from './AddActivityModal'
+import { Alert } from '@/components'
 import { useChatHistory } from './useChatHistory'
-
-function postToIframe(data: object) {
-  const iframe = document.querySelector('iframe') as HTMLIFrameElement | null
-  iframe?.contentWindow?.postMessage(data, '*')
-}
 import chatIcon from '@/assets/chat.png'
 import chevronForwardIcon from '@/assets/chevron_forward.png'
+
+const JACKSON_SMART_GOAL: SmartGoalData = {
+  goals: [
+    {
+      name: 'Blood Sugar Monitoring',
+      description: 'Daily glucose logging to support A1C reduction',
+      iconName: 'MonitorHeart',
+      fields: [
+        { label: 'What behavior or action should the member take?', value: 'Check blood sugar and log readings twice daily, before breakfast and before dinner' },
+        { label: 'How will you and the member know progress is being made?', value: 'Twice daily readings logged in Wellframe and A1C target below 8.0% at next lab visit.' },
+        { label: "Is this realistic given the member's current barriers and abilities?", value: 'Yes, member agreed and has no major barriers.' },
+        { label: "How does this goal connect to the member's condition or care plan?", value: 'Supports A1C reduction from 9.2%, consistent monitoring is the primary identified opportunity.' },
+        { label: 'What is the timeframe for this goal?', value: '30 days' },
+        { label: 'How will progress be tracked?', value: 'Wellframe app logging, phone calls, text.' },
+      ],
+    },
+    {
+      name: 'Medication Adherence',
+      description: 'Consistent use of prescribed diabetes medications',
+      iconName: 'Medication',
+      fields: [
+        { label: 'What behavior or action should the member take?', value: 'Take metformin as prescribed twice daily with meals and refill before running out' },
+        { label: 'How will you and the member know progress is being made?', value: 'Member self-reports adherence weekly via Wellframe and pharmacy refill history shows no gaps.' },
+        { label: "Is this realistic given the member's current barriers and abilities?", value: 'Yes, member has pharmacy coverage and is motivated to manage diabetes.' },
+        { label: "How does this goal connect to the member's condition or care plan?", value: 'Medication adherence is essential to achieving A1C target and preventing complications.' },
+        { label: 'What is the timeframe for this goal?', value: '60 days' },
+        { label: 'How will progress be tracked?', value: 'Pharmacy refill data, Wellframe check-ins, care manager follow-up calls.' },
+      ],
+    },
+    {
+      name: 'Foot Care & Exam',
+      description: 'Preventive foot care to reduce complication risk',
+      iconName: 'HealthAndSafety',
+      fields: [
+        { label: 'What behavior or action should the member take?', value: 'Complete annual podiatry exam and perform daily foot inspection at home' },
+        { label: 'How will you and the member know progress is being made?', value: 'Podiatry appointment scheduled and completed; member demonstrates daily inspection routine.' },
+        { label: "Is this realistic given the member's current barriers and abilities?", value: 'Yes, member has transportation access and podiatry is covered under their plan.' },
+        { label: "How does this goal connect to the member's condition or care plan?", value: 'Addresses open HEDIS gap for diabetic foot exam and reduces risk of amputation.' },
+        { label: 'What is the timeframe for this goal?', value: '30 days' },
+        { label: 'How will progress be tracked?', value: 'Appointment confirmation, HEDIS gap closure, member self-report.' },
+      ],
+    },
+  ],
+}
+
+const MARIA_SMART_GOAL: SmartGoalData = {
+  goals: [
+    {
+      name: 'Personal Care Aide Visits',
+      description: 'Maintain aide support for ADLs and independent living',
+      iconName: 'SupportAgent',
+      fields: [
+        { label: 'What behavior or action should the member take?', value: 'Participate in at least 3 approved personal care aide visits per week to assist with bathing, dressing, and meal preparation' },
+        { label: 'How will you and the member know progress is being made?', value: 'Care aide visit logs completed weekly and member reports ability to complete 2+ ADLs independently by next assessment.' },
+        { label: "Is this realistic given the member's current barriers and abilities?", value: 'Yes, member has authorized aide services and caregiver support at home.' },
+        { label: "How does this goal connect to the member's condition or care plan?", value: 'Supports LTSS care plan objective to maintain independent living and prevent nursing facility placement.' },
+        { label: 'What is the timeframe for this goal?', value: '60 days' },
+        { label: 'How will progress be tracked?', value: 'Aide visit logs, monthly care manager check-ins, ADL reassessment.' },
+      ],
+    },
+    {
+      name: 'Home Safety & Fall Prevention',
+      description: 'Reduce fall risk and improve safety in the home',
+      iconName: 'HomeWork',
+      fields: [
+        { label: 'What behavior or action should the member take?', value: 'Complete a home safety assessment and implement at least 2 recommended modifications (e.g. grab bars, removal of tripping hazards)' },
+        { label: 'How will you and the member know progress is being made?', value: 'Home safety checklist completed and modifications confirmed at next care manager visit.' },
+        { label: "Is this realistic given the member's current barriers and abilities?", value: 'Yes, member has family support and modifications are covered under LTSS waiver.' },
+        { label: "How does this goal connect to the member's condition or care plan?", value: 'Addresses fall risk identified in ADL assessment and supports continued community living.' },
+        { label: 'What is the timeframe for this goal?', value: '30 days' },
+        { label: 'How will progress be tracked?', value: 'Care manager home visit, member and caregiver self-report.' },
+      ],
+    },
+  ],
+}
+
+function postToIframe(data: object) {
+  const iframes = document.querySelectorAll('iframe')
+  iframes.forEach(f => f.contentWindow?.postMessage(data, '*'))
+}
 
 export interface HavenWindowProps {
   memberName?: string
@@ -77,6 +157,8 @@ export function HavenWindow({
   const [winState, setWinState] = useState<WindowState>('closed')
   const [menuOpen, setMenuOpen] = useState(false)
   const [summarizeMenuOpen, setSummarizeMenuOpen] = useState(false)
+  const [complianceMenuOpen, setComplianceMenuOpen] = useState(false)
+  const [documentMenuOpen, setDocumentMenuOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [learnMoreOpen, setLearnMoreOpen] = useState(false)
@@ -86,6 +168,14 @@ export function HavenWindow({
   const [historyOpen, setHistoryOpen] = useState(false)
   const [presetsOpen, setPresetsOpen] = useState(false)
   const [sukiActionsReady, setSukiActionsReady] = useState(false)
+  const [callInsightsOpen, setCallInsightsOpen] = useState(false)
+  const [liveAlerts, setLiveAlerts] = useState<SukiAlert[]>([])
+  const [alertTaskLabels, setAlertTaskLabels] = useState<Record<string, string[]>>({})
+  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null)
+  const [alertTaskView, setAlertTaskView] = useState<string | null>(null) // alert id in task-list view
+  const [addedAlertTasks, setAddedAlertTasks] = useState<Set<string>>(new Set())
+  const [doneAlertTasks, setDoneAlertTasks] = useState<Set<string>>(new Set())
+  const [openAlertModal, setOpenAlertModal] = useState<{ alertId: string; taskIdx: number; task: string } | null>(null)
 
   const { getSessionsForMember, saveSession, deleteSession, toggleFavorite, clearAllForMember } = useChatHistory()
   const [historyVersion, setHistoryVersion] = useState(0)
@@ -127,6 +217,7 @@ export function HavenWindow({
       top: window.innerHeight - defaultBottom - defaultHeight,
     })
     setPosReady(true)
+    cancelledRef.current = false
     // On unmount (member switch), cancel any in-flight response
     return () => { cancelledRef.current = true }
   }, [defaultBottom, defaultRight, defaultWidth, defaultHeight])
@@ -160,11 +251,13 @@ export function HavenWindow({
     const replyMsg: Message = {
       id: `a-${Date.now() + 1}`,
       role: 'assistant',
-      content: `Here's what I can and cannot help with:\n\nI don't have access to:\n• Clinical decisions or diagnosis\n• Systems outside this platform\n• Guaranteed accurate information — always verify yourself\n\nI have access to:\n• Member demographics\n• Clinical history\n• Care plan (goals, interventions)\n• Assessments\n• Eligibility\n• Care gaps\n• Claims data`,
+      content: `**I have access to:**\n• Member demographics\n• Clinical history\n• Care plan (goals, interventions)\n• Assessments\n• Eligibility\n• Care gaps\n• Claims data\n\n**I cannot help with:**\n• Clinical decisions or diagnosis\n• Systems outside this platform\n• Guaranteed accurate information, always verify yourself`,
     }
     setMessages(prev => [...prev, userMsg, replyMsg])
     setMenuOpen(false)
     setSummarizeMenuOpen(false)
+    setComplianceMenuOpen(false)
+    setDocumentMenuOpen(false)
     setLearnMoreOpen(true)
   }, [])
 
@@ -172,6 +265,7 @@ export function HavenWindow({
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || loading) return
+    cancelledRef.current = false
 
     // No-data members: block queries and surface a clear message
     if (!hasData) {
@@ -201,6 +295,8 @@ export function HavenWindow({
       setMessages(prev => [...prev, userMsg])
       setMenuOpen(false)
       setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
       setLearnMoreOpen(false)
       setLoading(true)
       try {
@@ -219,12 +315,144 @@ export function HavenWindow({
       return
     }
 
+    // Last update — early return with card
+    if (/show me the last update/i.test(resolvedText)) {
+      const lastUpdate = getLastUpdateData(memberName, mockMemberId)
+      setMessages(prev => [...prev, userMsg])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 400))
+      setLoading(false)
+      if (cancelledRef.current) return
+      setMessages(prev => [...prev, { id: `a-${Date.now()}`, role: 'assistant' as const, content: '', lastUpdate }])
+      return
+    }
+
+    // URAC checklist — early return with interactive card
+    if (resolvedText.toLowerCase().includes('urac')) {
+      setMessages(prev => [...prev, userMsg, {
+        id: `a-${Date.now() + 1}`,
+        role: 'assistant' as const,
+        content: `Here are the remaining tasks to complete for URAC compliance. Items already completed based on ${memberName.split(' ')[0]}'s record are checked off.`,
+        uracChecklist: true,
+      }])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      return
+    }
+
+    // Care plan summary — early return with interactive card (Jackson / Henry only)
+    const isCarePlanReview = /review.*care plan|care plan.*review|review.*member.*care|review.*current.*care/i.test(resolvedText)
+    if (isCarePlanReview && mockMemberId === 'AH58319473') {
+      const firstName = memberName.split(' ')[0]
+      setMessages(prev => [...prev, userMsg, {
+        id: `a-${Date.now() + 1}`,
+        role: 'assistant' as const,
+        content: `Here's a summary of ${firstName}'s current plan of care. You can update status, priority, and target dates inline.`,
+        carePlanSummary: true,
+        followUpChips: [
+          { label: 'Help me make a SMART Goal for the member', query: 'Help me make a SMART goal for the member' },
+          { label: 'Print plan', query: 'Print plan', inlineRow: true },
+          { label: 'Schedule follow-up', query: 'Schedule follow-up', inlineRow: true },
+          { label: 'Complete all for me', query: 'Complete all for me', isComplete: true },
+        ],
+      }])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      return
+    }
+
+    // SMART goal — early return with interactive card
+    const smartGoalData = resolvedText.toLowerCase().includes('smart goal')
+      ? mockMemberId === 'AH58319473' ? JACKSON_SMART_GOAL
+      : mockMemberId === 'AH72940158' ? MARIA_SMART_GOAL
+      : null
+      : null
+    if (smartGoalData) {
+      const firstName = memberName.split(' ')[0]
+      setMessages(prev => [...prev, userMsg, {
+        id: `a-${Date.now() + 1}`,
+        role: 'assistant' as const,
+        content: `Here's a SMART goal based on ${firstName}'s current care plan. Review and edit each field, then add to the care plan.`,
+        smartGoal: smartGoalData,
+      }])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      return
+    }
+
+    // Care gaps — append follow-up chips to add each open gap to the care plan
+    const isCareGapsQuery = /missing care gap|care gap|gaps in care|open gap/i.test(resolvedText)
+    if (isCareGapsQuery) {
+      const replyContent = getMockReply(resolvedText, memberName, mockMemberId)
+      const openGaps = getOpenCareGaps(mockMemberId).slice(0, 3)
+      const chips: FollowUpChip[] = openGaps.map(gap => ({
+        label: `Add "${gap.opportunity}" to care plan`,
+        query: `__ADD_CARE_GAP__${JSON.stringify({ opportunity: gap.opportunity, goal: gap.goal, category: gap.category })}`,
+      }))
+      setMessages(prev => [...prev, userMsg])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 400))
+      setLoading(false)
+      if (cancelledRef.current) return
+      setMessages(prev => [...prev, {
+        id: `a-${Date.now()}`,
+        role: 'assistant' as const,
+        content: replyContent,
+        followUpChips: chips,
+      }])
+      return
+    }
+
+    // Add gap to care plan — post to CWF and confirm
+    if (resolvedText.startsWith('__ADD_CARE_GAP__')) {
+      const gap = JSON.parse(resolvedText.slice('__ADD_CARE_GAP__'.length)) as { opportunity: string; goal: string; category: string }
+      const firstName = memberName.split(' ')[0]
+      setMessages(prev => [...prev, { ...userMsg, content: `Add "${gap.opportunity}" to care plan` }])
+      setMenuOpen(false)
+      setSummarizeMenuOpen(false)
+      setComplianceMenuOpen(false)
+      setDocumentMenuOpen(false)
+      setLearnMoreOpen(false)
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 400))
+      setLoading(false)
+      if (cancelledRef.current) return
+      postToIframe({ type: 'HAVEN_ADD_CARE_GAP', opportunity: gap.opportunity, goal: gap.goal, category: gap.category })
+      setMessages(prev => [...prev, {
+        id: `a-${Date.now()}`,
+        role: 'assistant' as const,
+        content: `"${gap.opportunity}" has been added to ${firstName}'s care plan.`,
+      }])
+      return
+    }
+
     // Mock path: show typing indicator briefly before resolving
     const guardrail = getGuardrailMessage(resolvedText)
     const replyContent = guardrail ?? getMockReply(resolvedText, memberName, mockMemberId)
     setMessages(prev => [...prev, userMsg])
     setMenuOpen(false)
     setSummarizeMenuOpen(false)
+    setComplianceMenuOpen(false)
+    setDocumentMenuOpen(false)
     setLearnMoreOpen(false)
     setLoading(true)
     await new Promise(resolve => setTimeout(resolve, 400))
@@ -237,7 +465,7 @@ export function HavenWindow({
       followUp: guardrail ? undefined : getFollowUp(resolvedText),
       followUpQuery: guardrail ? undefined : getFollowUpQuery(resolvedText),
     }])
-  }, [loading, hasData, memberName, mockMemberId, onSend, messages])
+  }, [loading, hasData, memberName, memberId, mockMemberId, onSend, messages])
 
   /* ── Drag ── */
   const dragState = useRef<{ startX: number; startY: number; startLeft: number; startTop: number } | null>(null)
@@ -297,6 +525,8 @@ export function HavenWindow({
     setWinState('closed')
     setMenuOpen(false)
     setSummarizeMenuOpen(false)
+    setComplianceMenuOpen(false)
+    setDocumentMenuOpen(false)
     setMessages([])
   }
   const handleMinimize = () => setWinState(s => s === 'minimized' ? 'open' : 'minimized')
@@ -386,11 +616,36 @@ export function HavenWindow({
     </div>
   )
 
+  const sukiNode = sukiOpen && !isHome ? (
+    <SukiWindow
+      onClose={() => { setSukiOpen(false); setAlertTaskLabels({}); setExpandedAlertId(null) }}
+      onNoteSent={() => {
+        setSukiOpen(false)
+        setCallInsightsOpen(true)
+        openMsgShownRef.current = true
+        setWinState('open')
+      }}
+      onAlert={(alert) => {
+        setLiveAlerts(prev => prev.some(a => a.id === alert.id) ? prev : [...prev, alert])
+      }}
+      memberName={memberName}
+      memberId={memberId}
+      phone={phone}
+      pcp={pcp}
+      age={age}
+      gender={gender}
+      dob={dob}
+      havenLeft={posReady ? pos.left : window.innerWidth - defaultRight - defaultWidth}
+      havenTop={posReady ? pos.top : window.innerHeight - defaultBottom - defaultHeight}
+    />
+  ) : null
+
   if (winState === 'closed') {
     return (
       <>
         {memberChat}
         {fab}
+        {sukiNode}
       </>
     )
   }
@@ -400,7 +655,7 @@ export function HavenWindow({
     ...(posReady
       ? { left: pos.left, top: pos.top, width: size.w, height: isMinimized ? 28 : size.h }
       : { right: defaultRight, bottom: defaultBottom, width: size.w, height: isMinimized ? 28 : size.h }),
-    ...(sukiOpen ? { zIndex: 800 } : {}),
+    ...(sukiOpen ? { zIndex: 800, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, transition: 'border-radius 0.18s ease' } : { transition: 'border-radius 0.18s ease' }),
   }
 
   const hasMessages = messages.length > 0 || loading
@@ -409,26 +664,7 @@ export function HavenWindow({
     <>
     {memberChat}
     {fab}
-    {sukiOpen && !isHome && (
-      <SukiWindow
-        onClose={() => setSukiOpen(false)}
-        onNoteSent={() => {
-          setSukiOpen(false)
-          setSukiActionsReady(true)
-          openMsgShownRef.current = true
-          setWinState('closed')
-        }}
-        memberName={memberName}
-        memberId={memberId}
-        phone={phone}
-        pcp={pcp}
-        age={age}
-        gender={gender}
-        dob={dob}
-        havenLeft={posReady ? pos.left : window.innerWidth - defaultRight - defaultWidth}
-        havenTop={posReady ? pos.top : window.innerHeight - defaultBottom - defaultHeight}
-      />
-    )}
+    {sukiNode}
     <div ref={windowRef} className={styles.window} style={windowStyle} role="dialog" aria-label="Haven AI assistant" aria-modal="false">
       {/* Resize handles */}
       {!isMinimized && (
@@ -460,7 +696,7 @@ export function HavenWindow({
           {!isHome && <MemberHeader memberName={memberName} phone={phone} memberId={memberId} pcp={pcp} onSukiClick={() => setSukiOpen(true)} onPresetsClick={() => setPresetsOpen(true)} onHistoryClick={() => setHistoryOpen(true)} />}
 
           <div className={panelStyles.chatArea}>
-            {/* Back button */}
+            {/* Back button — learn more only */}
             {learnMoreOpen && (
               <button
                 type="button"
@@ -475,6 +711,176 @@ export function HavenWindow({
 
             {/* Scroll area */}
             <div className={panelStyles.chatScroll}>
+              {/* Live call alerts from Suki — only shown after the call ends */}
+              {liveAlerts.length > 0 && !isHome && !sukiOpen && !callInsightsOpen && (() => {
+                // All tasks added across every alert (keyed by alertId:idx)
+                const allAddedEntries = liveAlerts.flatMap(a => {
+                  const labels = alertTaskLabels[a.id] ?? a.tasks
+                  return labels
+                    .map((label, idx) => ({ alertId: a.id, task: label, taskKey: `${a.id}:${idx}` }))
+                    .filter(({ taskKey }) => addedAlertTasks.has(taskKey))
+                })
+                const hasAdded = allAddedEntries.length > 0
+
+                if (alertTaskView === 'unified') {
+                  return (
+                    <div className={panelStyles.insightsWrap}>
+                      <div className={panelStyles.liveAlertStack}>
+                        <div className={panelStyles.liveAlertTaskListCard}>
+                          <div className={panelStyles.liveAlertTaskListHeader}>
+                            <button type="button" className={panelStyles.liveAlertBackBtn} onClick={() => setAlertTaskView(null)}>
+                              <Icon name="ArrowBack" size="xs" color="action" />
+                            </button>
+                            <Icon name="TaskAlt" size="sm" color="primary" />
+                            <span className={panelStyles.liveAlertTaskListTitle}>Task List</span>
+                          </div>
+                          <div className={panelStyles.liveAlertTasks}>
+                            {allAddedEntries.map(({ alertId, task, taskKey }) => {
+                              const isDone = doneAlertTasks.has(taskKey)
+                              return (
+                                <div key={taskKey} className={`${panelStyles.liveAlertTask} ${isDone ? panelStyles.liveAlertTaskDone : ''}`}>
+                                  <span className={panelStyles.liveAlertTaskIcon}>
+                                    <Icon name={isDone ? 'CheckCircle' : 'RadioButtonUnchecked'} size="md" color={isDone ? 'success' : 'action'} />
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className={`${panelStyles.liveAlertTaskLink}${isDone ? ` ${panelStyles.liveAlertTaskLinkDone}` : ''}`}
+                                    onClick={() => setOpenAlertModal({ alertId, taskIdx: parseInt(taskKey.split(':')[1]), task })}
+                                  >
+                                    {task}
+                                  </button>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className={panelStyles.insightsWrap}>
+                    <div className={panelStyles.liveAlertStack}>
+                    {liveAlerts.map(alert => {
+                      const labels = alertTaskLabels[alert.id] ?? alert.tasks
+                      return (
+                        <Alert
+                          key={alert.id}
+                          severity="warning"
+                          title={alert.label}
+                          onClose={() => {
+                            setLiveAlerts(prev => prev.filter(a => a.id !== alert.id))
+                            if (expandedAlertId === alert.id) setExpandedAlertId(null)
+                          }}
+                          action={
+                            expandedAlertId === alert.id ? (
+                              <div className={panelStyles.liveAlertExpanded}>
+                                <p className={panelStyles.liveAlertDetail}>{alert.detail}</p>
+                                <div className={panelStyles.liveAlertTasks}>
+                                  {labels.map((label, idx) => {
+                                    const taskKey = `${alert.id}:${idx}`
+                                    const added = addedAlertTasks.has(taskKey)
+                                    return (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        className={`${panelStyles.liveAlertTask}${added ? ` ${panelStyles.liveAlertTaskAdded}` : ''}`}
+                                        onClick={() => setAddedAlertTasks(prev => {
+                                          const next = new Set(prev)
+                                          added ? next.delete(taskKey) : next.add(taskKey)
+                                          return next
+                                        })}
+                                      >
+                                        <input
+                                          className={panelStyles.liveAlertTaskInput}
+                                          type="text"
+                                          value={label}
+                                          placeholder="Describe the task…"
+                                          aria-label={`Task ${idx + 1}`}
+                                          onClick={e => e.stopPropagation()}
+                                          onChange={e => {
+                                            e.stopPropagation()
+                                            setAlertTaskLabels(prev => {
+                                              const updated = [...(prev[alert.id] ?? alert.tasks)]
+                                              updated[idx] = e.target.value
+                                              return { ...prev, [alert.id]: updated }
+                                            })
+                                          }}
+                                        />
+                                        <span
+                                          className={`${panelStyles.liveAlertTaskAddBtn}${added ? ` ${panelStyles.liveAlertTaskAddBtnAdded}` : ''}`}
+                                          aria-hidden="true"
+                                        >
+                                          {added ? '✓' : '+'}
+                                        </span>
+                                      </button>
+                                    )
+                                  })}
+                                  <button
+                                    type="button"
+                                    className={panelStyles.liveAlertAddTaskBtn}
+                                    onClick={() => setAlertTaskLabels(prev => ({
+                                      ...prev,
+                                      [alert.id]: [...(prev[alert.id] ?? alert.tasks), ''],
+                                    }))}
+                                  >
+                                    <Icon name="AddCircleOutline" size="sm" color="primary" />
+                                    Add your own task
+                                  </button>
+                                </div>
+                                <button type="button" className={panelStyles.liveAlertCollapseBtn} onClick={() => setExpandedAlertId(null)}>Hide actions</button>
+                              </div>
+                            ) : (
+                              <button type="button" className={panelStyles.liveAlertReviewBtn} onClick={() => setExpandedAlertId(alert.id)}>
+                                Review actions
+                              </button>
+                            )
+                          }
+                        />
+                      )
+                    })}
+                    {hasAdded && (
+                      <button type="button" className={panelStyles.liveAlertFinishBtn} onClick={() => setAlertTaskView('unified')}>
+                        <Icon name="TaskAlt" size="sm" color="inherit" />
+                        View Task List ({allAddedEntries.length})
+                      </button>
+                    )}
+                    </div>
+                  </div>
+                )
+              })()}
+              {openAlertModal && (() => {
+                const taskKey = `${openAlertModal.alertId}:${openAlertModal.taskIdx}`
+                const activityConfig: ActivityConfig = {
+                  title: 'Add Activity',
+                  activityType: 'Follow-up',
+                  contactType: 'Member - Phone',
+                  scheduledDate: '',
+                }
+                return (
+                  <AddActivityModal
+                    config={activityConfig}
+                    memberName={memberName}
+                    onClose={() => setOpenAlertModal(null)}
+                    onAdd={() => {
+                      setDoneAlertTasks(prev => new Set(prev).add(taskKey))
+                      handleActivityAdded(activityConfig, 'activities')
+                      setOpenAlertModal(null)
+                    }}
+                  />
+                )
+              })()}
+              {callInsightsOpen && !isHome && (
+                <div className={panelStyles.insightsWrap}>
+                  <CallInsightsCard
+                    memberFirstName={memberName.split(' ')[0]}
+                    memberName={memberName}
+                    alerts={liveAlerts}
+                    onDismiss={() => { setCallInsightsOpen(false); setLiveAlerts([]) }}
+                  />
+                </div>
+              )}
               {sukiActionsReady && !isHome && (
                 <RecommendedActionsCard
                   memberName={memberName}
@@ -486,9 +892,18 @@ export function HavenWindow({
                 />
               )}
               {hasMessages ? (
-                <ChatMessages messages={messages} loading={loading} />
+                <ChatMessages
+                  messages={messages}
+                  loading={loading}
+                  onGoalAdded={(payload) => {
+                    postToIframe({ type: 'HAVEN_ADD_SMART_GOAL', ...payload })
+                  }}
+                  onFollowUpChip={(query) => sendMessage(query)}
+                  onNavigateNote={() => postToIframe({ type: 'HAVEN_NAVIGATE_NOTES' })}
+                  onNavigateActivity={() => postToIframe({ type: 'HAVEN_NAVIGATE_OUTSTANDING' })}
+                />
               ) : (
-                !sukiActionsReady && (
+                !sukiActionsReady && liveAlerts.length === 0 && !callInsightsOpen && (
                   <div className={panelStyles.welcomeWrap}>
                     {isHome
                       ? <HomeWelcome onPrompt={sendMessage} />
@@ -502,20 +917,52 @@ export function HavenWindow({
             {/* Member detail menu — floats above input bar (member view only) */}
             {!isHome && menuOpen && !hasMessages && (
               <div className={panelStyles.menuOverlay}>
-                <MemberDetailMenu
-                  onClose={() => setMenuOpen(false)}
-                  onSelect={sendMessage}
-                />
+                <button type="button" className={panelStyles.menuBackBtn} onClick={() => setMenuOpen(false)} aria-label="Back">
+                  <Icon name="ArrowBack" size="sm" color="action" />
+                  Back
+                </button>
+                <div className={panelStyles.menuCard}>
+                  <MemberDetailMenu onClose={() => setMenuOpen(false)} onSelect={sendMessage} memberId={memberId} />
+                </div>
               </div>
             )}
 
             {/* Summarize menu — floats above input bar (member view only) */}
             {!isHome && summarizeMenuOpen && !hasMessages && (
               <div className={panelStyles.menuOverlay}>
-                <SummarizeMenu
-                  onClose={() => setSummarizeMenuOpen(false)}
-                  onSelect={sendMessage}
-                />
+                <button type="button" className={panelStyles.menuBackBtn} onClick={() => setSummarizeMenuOpen(false)} aria-label="Back">
+                  <Icon name="ArrowBack" size="sm" color="action" />
+                  Back
+                </button>
+                <div className={panelStyles.menuCard}>
+                  <SummarizeMenu onClose={() => setSummarizeMenuOpen(false)} onSelect={sendMessage} />
+                </div>
+              </div>
+            )}
+
+            {/* Compliance menu — floats above input bar (member view only) */}
+            {!isHome && complianceMenuOpen && !hasMessages && (
+              <div className={panelStyles.menuOverlay}>
+                <button type="button" className={panelStyles.menuBackBtn} onClick={() => setComplianceMenuOpen(false)} aria-label="Back">
+                  <Icon name="ArrowBack" size="sm" color="action" />
+                  Back
+                </button>
+                <div className={panelStyles.menuCard}>
+                  <ComplianceMenu onClose={() => setComplianceMenuOpen(false)} onSelect={sendMessage} memberId={memberId} />
+                </div>
+              </div>
+            )}
+
+            {/* Document menu — floats above input bar (member view only) */}
+            {!isHome && documentMenuOpen && !hasMessages && (
+              <div className={panelStyles.menuOverlay}>
+                <button type="button" className={panelStyles.menuBackBtn} onClick={() => setDocumentMenuOpen(false)} aria-label="Back">
+                  <Icon name="ArrowBack" size="sm" color="action" />
+                  Back
+                </button>
+                <div className={panelStyles.menuCard}>
+                  <DocumentMenu onClose={() => setDocumentMenuOpen(false)} onSelect={sendMessage} />
+                </div>
               </div>
             )}
 
@@ -525,7 +972,7 @@ export function HavenWindow({
               <p className={panelStyles.disclaimer}>
                 Check your responses for accuracy.{' '}
                 <button type="button" className={panelStyles.disclaimerLink} onClick={handleLearnMore}>
-                  What this assistant can and cannot do
+                  What this assistant has access to
                 </button>
               </p>
             </div>
@@ -537,6 +984,7 @@ export function HavenWindow({
               onClose={() => setPresetsOpen(false)}
               onSelectPrompt={(text) => { sendMessage(text); setPresetsOpen(false) }}
               memberName={memberName}
+              memberId={memberId}
             />
           )}
 
