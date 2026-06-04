@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './SukiWindow.module.css'
 
 const SUKI_W = 440
@@ -22,6 +22,50 @@ const NOTE_TEXT =
 const SUMMARY_TEXT =
   "The care manager conducted a check-in call with the member regarding ongoing management of Type 2 diabetes mellitus and essential hypertension. The member reported intermittent medication adherence and difficulty with dietary modifications. Fasting glucose has been elevated, averaging approximately 180 mg/dL. Blood pressure was self-reported at 142/88 mmHg.\n\nThe member expressed interest in speaking with a nutritionist and raised concerns about knee pain limiting physical activity. Care gaps reviewed include overdue HbA1c lab work and a pending cardiology follow-up. The member agreed to schedule an appointment with their PCP within the next two weeks and confirmed willingness to participate in a structured care plan review."
 
+// Mock transcript lines — 'CM' and 'Member' are replaced at render time with real names
+const TRANSCRIPT_LINES = [
+  { speaker: 'CM', text: 'Hi, this is Beatrice calling from GuidingCare. Am I speaking with Jackson?' },
+  { speaker: 'Member', text: 'Yes, this is Jackson.' },
+  { speaker: 'CM', text: "Great! I'm calling to check in on how you've been doing with your medications." },
+  { speaker: 'Member', text: "I've been taking the Metformin most days, but I sometimes forget the evening dose." },
+  { speaker: 'CM', text: 'Got it. And how have your blood sugar levels been lately?' },
+  { speaker: 'Member', text: "They've been a bit high — usually around 180 in the morning." },
+  { speaker: 'CM', text: "Okay, I'll note that. Have you had any issues with transportation to your upcoming PCP visit?" },
+  { speaker: 'Member', text: "Yeah, I don't have a car so I was hoping my brother could drive me." },
+  { speaker: 'CM', text: "Understood. We can also look into a ride service if needed. I'll flag that in your care plan." },
+]
+
+export interface Alert {
+  id: string
+  label: string
+  detail: string
+  tasks: string[]
+}
+
+// Alerts keyed by the transcript line index that triggers them
+const TRANSCRIPT_ALERTS: Record<number, Alert> = {
+  3: {
+    id: 'med-adherence',
+    label: 'Medication adherence issue detected',
+    detail: 'Member reports missing evening Metformin doses — not documented in care plan.',
+    tasks: [
+      'Add medication adherence barrier to care plan',
+      'Schedule pharmacist medication review',
+      'Set up evening dose reminder in care plan',
+    ],
+  },
+  7: {
+    id: 'transportation',
+    label: 'New issue identified: Transportation barrier',
+    detail: 'Member reports no personal vehicle — not documented as a care barrier.',
+    tasks: [
+      'Add transportation barrier to care plan',
+      'Research non-emergency medical transport options',
+      'Document SDOH transportation flag in member record',
+    ],
+  },
+}
+
 // Bar heights (px) for the waveform — alternating yellow accent bars
 const BAR_HEIGHTS = [18,32,48,26,54,22,40,60,28,44,70,30,52,24,64,38,56,20,46,66,34,58,22,50,72,28,42,62,36,54]
 const YELLOW_BARS  = new Set([2,6,10,14,18,22,26])
@@ -29,6 +73,7 @@ const YELLOW_BARS  = new Set([2,6,10,14,18,22,26])
 interface SukiWindowProps {
   onClose: () => void
   onNoteSent?: (summaryText: string) => void
+  onAlert?: (alert: Alert) => void
   memberName: string
   memberId: string
   phone: string
@@ -42,17 +87,87 @@ interface SukiWindowProps {
 
 type View = 'notes' | 'detail' | 'summary'
 
-export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, pcp, age, gender, dob, havenLeft, havenTop }: SukiWindowProps) {
+export function SukiWindow({ onClose, onNoteSent, onAlert, memberName, memberId, phone, pcp, age, gender, dob, havenLeft, havenTop }: SukiWindowProps) {
   const [view, setView]                   = useState<View>('notes')
   const [ambientActive, setAmbientActive] = useState(false)
+  const [ambientPaused, setAmbientPaused] = useState(false)
   const [elapsed, setElapsed]             = useState(0)
   const [summaryLoading, setSummaryLoading] = useState(false)
+  const [reminderSent, setReminderSent]     = useState(false)
+
+  // Transcript state: list of fully-revealed lines + the current line being typed
+  const [transcriptLines, setTranscriptLines] = useState<{ speaker: string; text: string }[]>([])
+  const [currentLine, setCurrentLine] = useState<{ speaker: string; text: string } | null>(null)
+  const transcriptBottomRef = useRef<HTMLDivElement>(null)
+  const pausedRef = useRef(false)
+
+  const firedAlertsRef = useRef<Set<string>>(new Set())
+
+  const stopAmbient = () => {
+    setAmbientActive(false)
+    setAmbientPaused(false)
+    pausedRef.current = false
+  }
 
   useEffect(() => {
-    if (!ambientActive) { setElapsed(0); return }
+    if (!ambientActive || ambientPaused) { return }
     const id = setInterval(() => setElapsed(e => e + 1), 1000)
     return () => clearInterval(id)
+  }, [ambientActive, ambientPaused])
+
+  // Stream transcript lines word-by-word while ambient is active
+  useEffect(() => {
+    if (!ambientActive) {
+      setTranscriptLines([])
+      setCurrentLine(null)
+      setElapsed(0)
+      firedAlertsRef.current = new Set()
+      return
+    }
+
+    let cancelled = false
+    let lineIdx = 0
+    let wordIdx = 0
+
+    const tick = () => {
+      if (cancelled) return
+      if (pausedRef.current) { setTimeout(tick, 100); return }
+
+      const line = TRANSCRIPT_LINES[lineIdx]
+      if (!line) return
+
+      const words = line.text.split(' ')
+      wordIdx++
+      setCurrentLine({ speaker: line.speaker, text: words.slice(0, wordIdx).join(' ') })
+
+      if (wordIdx >= words.length) {
+        const completed = { speaker: line.speaker, text: line.text }
+        setTranscriptLines(prev => [...prev, completed])
+        setCurrentLine(null)
+        // Fire alert if this line index has one
+        const alert = TRANSCRIPT_ALERTS[lineIdx]
+        if (alert && !firedAlertsRef.current.has(alert.id)) {
+          firedAlertsRef.current.add(alert.id)
+          setTimeout(() => onAlert?.(alert), 400)
+        }
+        lineIdx++
+        wordIdx = 0
+        if (lineIdx < TRANSCRIPT_LINES.length) {
+          setTimeout(tick, 900)
+        }
+      } else {
+        setTimeout(tick, 120)
+      }
+    }
+
+    setTimeout(tick, 800)
+    return () => { cancelled = true }
   }, [ambientActive])
+
+  // Auto-scroll transcript to bottom
+  useEffect(() => {
+    transcriptBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [transcriptLines, currentLine])
 
   const fmtTimer = (s: number) => {
     const mm = String(Math.floor(s / 60)).padStart(2, '0')
@@ -68,21 +183,15 @@ export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, p
   }
 
   const handleSummaryDone = () => {
-    // Signal the CWF iframe directly via postMessage (primary)
-    const iframe = document.querySelector('iframe') as HTMLIFrameElement | null
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'SUKI_NOTE_READY', noteText: SUMMARY_TEXT }, '*')
-    }
-    // Also write localStorage as fallback for cross-tab (GitHub Pages)
-    localStorage.setItem('suki-note-ready', SUMMARY_TEXT)
     onNoteSent?.(SUMMARY_TEXT)
     onClose()
   }
 
   // Use first two name parts for display
   const displayName = memberName.split(' ').slice(0, 2).join(' ')
+  const firstName = memberName.split(' ')[0] || 'Member'
 
-  const left = Math.max(16, havenLeft - SUKI_W - 12)
+  const left = Math.max(16, havenLeft - SUKI_W)
   const top  = havenTop
 
   return (
@@ -164,12 +273,40 @@ export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, p
                 className={styles.ambientCloseBtn}
                 type="button"
                 aria-label="Close ambient"
-                onClick={() => setAmbientActive(false)}
+                onClick={stopAmbient}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
               </button>
+
+              {/* Haven status pill */}
+              <div className={styles.havenPill} aria-live="polite">
+                <span className={styles.havenPillDot} aria-hidden="true" />
+                Haven is transcribing and gathering insights…
+              </div>
+
+              {/* Live transcript */}
+              <div className={styles.transcriptScroll}>
+                {transcriptLines.map((line, i) => (
+                  <p key={i} className={styles.transcriptLine}>
+                    <span className={styles.transcriptSpeaker}>
+                      {line.speaker === 'CM' ? 'Beatrice' : firstName}:
+                    </span>{' '}
+                    {line.text}
+                  </p>
+                ))}
+                {currentLine && (
+                  <p className={styles.transcriptLine}>
+                    <span className={styles.transcriptSpeaker}>
+                      {currentLine.speaker === 'CM' ? 'Beatrice' : firstName}:
+                    </span>{' '}
+                    {currentLine.text}
+                    <span className={styles.transcriptCursor} />
+                  </p>
+                )}
+                <div ref={transcriptBottomRef} />
+              </div>
 
               {/* Waveform */}
               <div className={styles.waveformWrap} aria-hidden="true">
@@ -181,6 +318,7 @@ export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, p
                       style={{
                         height: h,
                         animationDelay: `${(i * 0.07).toFixed(2)}s`,
+                        animationPlayState: ambientPaused ? 'paused' : 'running',
                       }}
                     />
                   ))}
@@ -199,9 +337,13 @@ export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, p
                 <button
                   className={styles.pauseBtn}
                   type="button"
-                  onClick={() => setAmbientActive(false)}
+                  onClick={() => {
+                    const next = !ambientPaused
+                    setAmbientPaused(next)
+                    pausedRef.current = next
+                  }}
                 >
-                  Pause
+                  {ambientPaused ? 'Resume' : 'Pause'}
                 </button>
                 <button
                   className={styles.ambientDoneBtn}
@@ -329,7 +471,7 @@ export function SukiWindow({ onClose, onNoteSent, memberName, memberId, phone, p
                   <div className={styles.generatingDots}>
                     <span /><span /><span />
                   </div>
-                  <p className={styles.generatingLabel}>Generating summary...</p>
+                  <p className={styles.generatingLabel}>Haven is processing the call…</p>
                 </div>
               ) : (
                 <p className={styles.detailSectionBody}>{SUMMARY_TEXT}</p>

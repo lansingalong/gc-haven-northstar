@@ -1,16 +1,23 @@
 /* ── Suki Window — Figma design ── */
 
+@keyframes sukiSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
 .window {
   position: fixed;
   z-index: 900;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
-  box-shadow: 0px 16px 48px rgba(0, 0, 0, 0.14), 0px 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 8px 0 0 8px;
+  box-shadow: -8px 16px 48px rgba(0, 0, 0, 0.10), -2px 4px 16px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.10);
+  border-right: none;
   overflow: hidden;
   background: #fafafa;
-  font-family: var(--font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-family: var(--font-family-base);
+  animation: sukiSlideIn 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* ── Top bar ── */
@@ -218,15 +225,202 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 220px;
+  height: 420px;
   background: #1b5065;
   border-radius: 14px 14px 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px 18px;
+}
+
+/* Real-time alerts */
+.alertStack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.alertCard {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 208, 70, 0.45);
+  border-radius: 10px;
+  padding: 10px 12px;
+  animation: alertSlideIn 0.25s ease-out both;
+}
+
+@keyframes alertSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.alertHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffd046;
+  flex-shrink: 0;
+  animation: alertPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes alertPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+.alertLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffd046;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.alertDismiss {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.alertDismiss:hover { color: rgba(255, 255, 255, 0.9); }
+
+.alertReviewBtn {
+  margin-top: 6px;
+  background: none;
+  border: 1px solid rgba(255, 208, 70, 0.5);
+  border-radius: 6px;
+  color: #ffd046;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.alertReviewBtn:hover { background: rgba(255, 208, 70, 0.12); }
+
+.alertExpanded {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alertDetail {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.alertTasks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alertTask {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.alertTask:hover { background: rgba(255, 255, 255, 0.13); }
+
+.alertTaskAdded {
+  background: rgba(255, 208, 70, 0.15);
+  border-color: rgba(255, 208, 70, 0.5);
+  color: #ffd046;
+}
+
+.alertTaskIcon {
+  font-size: 13px;
+  font-weight: 700;
+  width: 14px;
+  flex-shrink: 0;
+  color: #ffd046;
+}
+
+.alertCollapseBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 0;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.alertCollapseBtn:hover { color: rgba(255, 255, 255, 0.75); }
+
+/* Live transcript */
+.transcriptScroll {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 32px 4px 4px;
+  scrollbar-width: none;
+}
+
+.transcriptScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.transcriptLine {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.transcriptSpeaker {
+  font-weight: 600;
+  color: #ffd046;
+}
+
+.transcriptCursor {
+  display: inline-block;
+  width: 2px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: cursorBlink 0.8s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 
 .ambientCloseBtn {
@@ -708,4 +902,220 @@
   font-size: 13px;
   color: #6b7280;
   margin: 0;
+}
+
+.havenInsightsNote {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── Haven status pill (ambient overlay) ── */
+.havenPill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 999px;
+  padding: 4px 12px 4px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.havenPillDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a78bfa;
+  flex-shrink: 0;
+  animation: havenPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes havenPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* ── Post-summary section headers ── */
+.postSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  margin: 20px 0 8px;
+}
+
+.postSectionIcon {
+  font-size: 13px;
+  color: #d97706;
+}
+
+.postSectionIconBlue {
+  font-size: 13px;
+  color: #1e5f7e;
+}
+
+.postSectionIconAmber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f59e0b;
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* ── Alert recap cards ── */
+.alertRecapStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alertRecapCard {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.alertRecapDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.alertRecapLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 2px;
+}
+
+.alertRecapDetail {
+  font-size: 12px;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Haven insight cards ── */
+.insightStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insightCard {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.insightLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0c4a6e;
+  margin: 0 0 2px;
+}
+
+.insightDetail {
+  font-size: 12px;
+  color: #164e63;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Missed item card ── */
+.missedCard {
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.missedCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.missedCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #713f12;
+  line-height: 1.3;
+}
+
+.missedCardTag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #92400e;
+  background: #fed7aa;
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.missedCardDetail {
+  font-size: 12px;
+  color: #78350f;
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.missedCardBtn {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1.5px solid #f59e0b;
+  background: transparent;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.missedCardBtn:hover {
+  background: #fde68a;
+}
+
+.missedCardBtn:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.missedCardBtnDone {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+  cursor: default;
+}
+
+.missedCardBtnDone:hover {
+  background: #d1fae5;
 }

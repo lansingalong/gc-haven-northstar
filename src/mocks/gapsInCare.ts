@@ -6,6 +6,8 @@
 
 export interface GapInCare {
   opportunity: string
+  opportunityDescription: string
+  goal: string
   opportunityStatus: string
   measureCode: string
   measureCategory: string
@@ -19,6 +21,8 @@ export interface GapInCare {
 export const mockGapsInCare: GapInCare[] = [
   {
     opportunity: 'Annual Wellness Visit',
+    opportunityDescription: 'Member has not completed an Annual Wellness Visit this year',
+    goal: 'Member will complete an Annual Wellness Visit by end of measurement year',
     opportunityStatus: 'Open',
     measureCode: 'AWV',
     measureCategory: 'Preventive Care',
@@ -30,6 +34,8 @@ export const mockGapsInCare: GapInCare[] = [
   },
   {
     opportunity: 'Diabetic Eye Exam (Retinal Screening)',
+    opportunityDescription: 'Member has not had a retinal eye exam — required annually for Type 2 Diabetes',
+    goal: 'Member will schedule and complete a retinal screening with an ophthalmologist',
     opportunityStatus: 'Open',
     measureCode: 'EED',
     measureCategory: 'Diabetes Management',
@@ -41,6 +47,8 @@ export const mockGapsInCare: GapInCare[] = [
   },
   {
     opportunity: 'Depression Screening (PHQ-9)',
+    opportunityDescription: 'Member is overdue for annual depression screening (PHQ-9)',
+    goal: 'Member will complete a PHQ-9 depression screening at next care contact',
     opportunityStatus: 'Open',
     measureCode: 'DSF',
     measureCategory: 'Behavioral Health',
@@ -52,6 +60,8 @@ export const mockGapsInCare: GapInCare[] = [
   },
   {
     opportunity: 'HbA1c Testing',
+    opportunityDescription: 'Member requires HbA1c monitoring for diabetes management',
+    goal: 'Member will have HbA1c tested at least twice in the measurement year',
     opportunityStatus: 'Closed',
     measureCode: 'HBA1C',
     measureCategory: 'Diabetes Management',
@@ -63,6 +73,8 @@ export const mockGapsInCare: GapInCare[] = [
   },
   {
     opportunity: 'Kidney Health Evaluation',
+    opportunityDescription: 'Member has not completed annual kidney health evaluation (uACR)',
+    goal: 'Member will complete a urine albumin-to-creatinine ratio (uACR) test this year',
     opportunityStatus: 'Open',
     measureCode: 'KED',
     measureCategory: 'Diabetes Management',
@@ -74,6 +86,8 @@ export const mockGapsInCare: GapInCare[] = [
   },
   {
     opportunity: 'Statin Therapy for Cardiovascular Disease',
+    opportunityDescription: 'Member should be on statin therapy for cardiovascular risk reduction',
+    goal: 'Member will be prescribed and adherent to statin therapy to reduce cardiovascular risk',
     opportunityStatus: 'Closed',
     measureCode: 'SPC',
     measureCategory: 'Cardiovascular',

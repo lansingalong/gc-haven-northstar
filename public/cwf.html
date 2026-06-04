@@ -1887,7 +1887,7 @@
             </div>
           </div>
           <!-- Care Plan OGI card -->
-          <div style="background:var(--white);padding:0 16px 16px;">
+          <div id="cp-ogi-list" style="background:var(--white);padding:0 16px 16px;">
             <div id="cp-ogi-card" style="border:1px solid var(--border);border-radius:4px;margin-top:14px;overflow:hidden;">
               <!-- Top row: Opportunity / Goal / Condition -->
               <div style="display:flex;align-items:flex-start;padding:12px 14px 10px;gap:16px;border-bottom:1px solid var(--border-light);">
@@ -4946,6 +4946,7 @@ function openScriptResponseModal() {
     var notesTbody = document.querySelector('#artab-notes .gc-table tbody');
     if (notesTbody) notesTbody.innerHTML = memberTabData[currentMemberKey].notes.join('');
     document.getElementById('addNoteModal').classList.remove('open');
+    window.parent.postMessage({ type: 'SUKI_NOTE_SAVED' }, '*');
   };
 
   // Listen for Suki note signal via postMessage (primary — from parent Haven React app)
@@ -4997,10 +4998,10 @@ window.addEventListener('message', function(e) {
         '<td>N/A</td>' +
         '<td>' + timeStr + '</td>' +
         '<td>N/A</td><td>N/A</td><td>N/A</td>' +
-        '<td>Lansing Cai : All Access Admin</td>' +
+        '<td>Beatrice Kanya : All Access Admin</td>' +
         '<td>N/A</td>' +
         '<td>Accepted</td>' +
-        '<td>Lansing Cai : All Access Admin</td>' +
+        '<td>Beatrice Kanya : All Access Admin</td>' +
         '<td>N/A</td>' +
         '<td style="font-size:10px;">' + createdStr + '</td>' +
         '<td></td>' +
@@ -5030,6 +5031,38 @@ window.addEventListener('message', function(e) {
     if (oaPanel) { oaPanel.style.display = ''; oaPanel.classList.add('active'); }
   }
 
+  // Navigate to Activity Record → Notes sub-tab
+  if (e.data.type === 'HAVEN_NAVIGATE_NOTES') {
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var arNavN = document.querySelector('.gc-left-item[data-left="activity-record"]');
+    if (arNavN) arNavN.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var arPanelN = document.getElementById('panel-activity-record');
+    if (arPanelN) { arPanelN.style.display = ''; arPanelN.classList.add('active'); }
+    document.querySelectorAll('#activityTabs .gc-tab').forEach(function(t) { t.classList.remove('active'); t.style.color = ''; t.style.borderBottomColor = ''; });
+    document.querySelectorAll('.ar-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var nTab = document.querySelector('#activityTabs .gc-tab[data-artab="notes"]');
+    if (nTab) { nTab.classList.add('active'); nTab.style.color = 'var(--teal)'; nTab.style.borderBottomColor = 'var(--teal)'; }
+    var nPanel = document.getElementById('artab-notes');
+    if (nPanel) { nPanel.style.display = ''; nPanel.classList.add('active'); }
+  }
+
+  // Navigate to Activity Record → Activity Summary sub-tab
+  if (e.data.type === 'HAVEN_NAVIGATE_ACTIVITY_SUMMARY') {
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var arNav2 = document.querySelector('.gc-left-item[data-left="activity-record"]');
+    if (arNav2) arNav2.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var arPanel2 = document.getElementById('panel-activity-record');
+    if (arPanel2) { arPanel2.style.display = ''; arPanel2.classList.add('active'); }
+    document.querySelectorAll('#activityTabs .gc-tab').forEach(function(t) { t.classList.remove('active'); t.style.color = ''; t.style.borderBottomColor = ''; });
+    document.querySelectorAll('.ar-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var asTab = document.querySelector('#activityTabs .gc-tab[data-artab="activity-summary"]');
+    if (asTab) { asTab.classList.add('active'); asTab.style.color = 'var(--teal)'; asTab.style.borderBottomColor = 'var(--teal)'; }
+    var asPanel = document.getElementById('artab-activity-summary');
+    if (asPanel) { asPanel.style.display = ''; asPanel.classList.add('active'); }
+  }
+
   // Navigate to Care Plan left panel → Care Plan Overview sub-tab
   if (e.data.type === 'HAVEN_NAVIGATE_CARE_PLAN') {
     document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
@@ -5040,6 +5073,283 @@ window.addEventListener('message', function(e) {
     if (cpPanel) { cpPanel.style.display = ''; cpPanel.classList.add('active'); }
     cpTier1Tab('team');
     cpSubTab('overview');
+  }
+
+  if (e.data.type === 'HAVEN_ADD_SMART_GOAL') {
+    var goalName = e.data.goalName || 'SMART Goal';
+    var goalDesc = e.data.goalDescription || '';
+    var fields = e.data.fields || [];
+    var behaviorField = fields.find(function(f) { return f.label && f.label.toLowerCase().includes('behavior'); });
+    var goalText = behaviorField ? behaviorField.value : (goalDesc || goalName);
+    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    var list = document.getElementById('cp-ogi-list');
+    if (!list) return;
+
+    // Dedup by goal name
+    var safeKey = goalName.replace(/[^a-zA-Z0-9]/g, '-');
+    if (list.querySelector('[data-haven-goal="' + safeKey + '"]')) return;
+
+    var behaviorValue = behaviorField ? behaviorField.value : goalText;
+    var today2 = today; // alias for use in template
+    var fieldsHtml = fields.map(function(f) {
+      return '<div style="margin-bottom:6px;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:2px;">' + f.label + '</div>' +
+        '<div style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + f.value + '</div>' +
+      '</div>';
+    }).join('');
+
+    var card = document.createElement('div');
+    card.setAttribute('data-haven-goal', safeKey);
+    card.style.cssText = 'border:1px solid var(--border);border-radius:4px;margin-top:14px;overflow:hidden;animation:havenGoalIn 300ms ease-out both;';
+    card.innerHTML =
+      '<style>@keyframes havenGoalIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}</style>' +
+      /* ── Row 1: Opportunity / Goal / Goal Group / Member Goal / Condition ── */
+      '<div style="display:flex;align-items:flex-start;padding:12px 14px 10px;gap:16px;border-bottom:1px solid var(--border-light);">' +
+        '<div style="flex:0 0 200px;display:flex;flex-direction:column;gap:3px;">' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#E07820;border-radius:3px;flex-shrink:0;">' +
+              '<span class="material-icons" style="font-size:13px;color:#fff;">edit_note</span>' +
+            '</span>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Opportunity</span>' +
+          '</div>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;padding-left:28px;">' + goalName + '</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + goalText + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 130px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal Group</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Care Coordination</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Condition</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+      '</div>' +
+      /* ── Row 2: Select / Eligibility / Current / Priority / Sign Off ── */
+      '<div style="display:flex;align-items:center;gap:20px;padding:8px 14px;border-bottom:1px solid var(--border-light);background:#fafafa;">' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Select</label>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">' +
+          '<span style="font-weight:600;">Eligibility</span>' +
+          '<span style="display:inline-flex;align-items:center;gap:3px;color:#2e7d32;font-weight:600;"><span class="material-icons" style="font-size:14px;color:#2e7d32;">check_circle</span> Active</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;margin-left:8px;">' +
+          '<span class="material-icons" style="font-size:16px;color:#005d9f;">auto_awesome</span>' +
+          '<span style="font-weight:700;color:#005d9f;">Added by AI</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto;">' +
+          '<span style="font-weight:600;color:var(--text-secondary);">Priority</span>' +
+          '<select style="height:26px;border:1px solid var(--border);border-radius:3px;padding:0 18px 0 6px;font-size:12px;font-family:var(--font);outline:none;appearance:none;background:white url(\'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'10\\\' height=\\\'10\\\' viewBox=\\\'0 0 24 24\\\'%3E%3Cpath fill=\\\'%23888\\\' d=\\\'M7 10l5 5 5-5z\\\'/%3E%3C/svg%3E\') no-repeat right 4px center;color:#E07820;font-weight:700;cursor:pointer;"><option>High</option><option>Medium</option><option>Low</option></select>' +
+        '</div>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;border:1px solid var(--border);border-radius:3px;padding:3px 10px;">' +
+          '<input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Sign Off' +
+        '</label>' +
+      '</div>' +
+      /* ── Row 3: Intervention ── */
+      '<div style="padding:10px 14px 6px;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:3px;">Intervention</div>' +
+        '<div style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + behaviorValue + '</div>' +
+      '</div>' +
+      /* ── Row 4: Status / Member Plan / Start Date / Target Date / Sign off Date / Resolved Date / Add Appointment ── */
+      '<div style="display:flex;gap:0;padding:8px 14px;border-top:1px solid var(--border-light);flex-wrap:wrap;">' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Status</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">In Progress</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Plan</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">I will work with my care manager to achieve this goal.</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Start Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today2 + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Target Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Sign off Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 160px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Opportunity Resolved Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Add Appointment</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">NO</span>' +
+        '</div>' +
+      '</div>' +
+      /* ── Row 5: SMART Goal details ── */
+      '<div style="padding:8px 14px;border-top:1px solid var(--border-light);">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">SMART Goal Details</div>' +
+        fieldsHtml +
+      '</div>' +
+      /* ── Row 6: Targeted To / Script / Roles / Term / Assigned Owner / Source / Created On / Created By ── */
+      '<div style="display:flex;gap:0;padding:8px 14px;border-top:1px solid var(--border-light);flex-wrap:wrap;">' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Targeted To</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Script Name</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Roles</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">All Access Admin</span>' +
+        '</div>' +
+        '<div style="flex:0 0 80px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Term</span>' +
+          '<span style="font-size:12px;color:var(--link);cursor:pointer;">Short</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Assigned Owner</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Beatrice Kanya</span>' +
+        '</div>' +
+        '<div style="flex:0 0 80px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Source</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Manual</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created On</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today2 + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created By</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Beatrice Kanya</span>' +
+        '</div>' +
+      '</div>' +
+      /* ── Row 7: Additional Information ── */
+      '<div style="padding:6px 14px 12px;border-top:1px solid var(--border-light);">' +
+        '<a href="#" style="color:var(--link);display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;text-decoration:none;">' +
+          '<span class="material-icons" style="font-size:15px;">info_outline</span> Additional Information' +
+        '</a>' +
+      '</div>';
+
+    list.insertBefore(card, list.firstChild);
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var cpNav2 = document.querySelector('.gc-left-item[data-left="care-plan"]');
+    if (cpNav2) cpNav2.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var cpPanel2 = document.getElementById('panel-care-plan');
+    if (cpPanel2) { cpPanel2.style.display = ''; cpPanel2.classList.add('active'); }
+    cpTier1Tab('team');
+    cpSubTab('overview');
+    setTimeout(function() { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+  }
+
+  if (e.data.type === 'HAVEN_ADD_CARE_GAP') {
+    var gapOpportunity = e.data.opportunity || 'Care Gap';
+    var gapGoal = e.data.goal || gapOpportunity;
+    var gapCategory = e.data.category || 'Care Coordination';
+    var today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    var list = document.getElementById('cp-ogi-list');
+    if (!list) return;
+
+    var card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--border);border-radius:4px;margin-top:14px;overflow:hidden;animation:havenGoalIn 300ms ease-out both;';
+    card.innerHTML =
+      '<style>@keyframes havenGoalIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}</style>' +
+      '<div style="display:flex;align-items:flex-start;padding:12px 14px 10px;gap:16px;border-bottom:1px solid var(--border-light);">' +
+        '<div style="flex:0 0 200px;display:flex;flex-direction:column;gap:3px;">' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#E07820;border-radius:3px;flex-shrink:0;">' +
+              '<span class="material-icons" style="font-size:13px;color:#fff;">edit_note</span>' +
+            '</span>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Opportunity</span>' +
+          '</div>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;padding-left:28px;">' + gapOpportunity + '</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + gapGoal + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 130px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Goal Group</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + gapCategory + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Goal</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 120px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Condition</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:20px;padding:8px 14px;border-bottom:1px solid var(--border-light);background:#fafafa;">' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Select</label>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary);">' +
+          '<span style="font-weight:600;">Eligibility</span>' +
+          '<span style="display:inline-flex;align-items:center;gap:3px;color:#2e7d32;font-weight:600;"><span class="material-icons" style="font-size:14px;color:#2e7d32;">check_circle</span> Active</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:12px;margin-left:8px;">' +
+          '<span class="material-icons" style="font-size:16px;color:#005d9f;">auto_awesome</span>' +
+          '<span style="font-weight:700;color:#005d9f;">Added by AI</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto;">' +
+          '<span style="font-weight:600;color:var(--text-secondary);">Priority</span>' +
+          '<select style="height:26px;border:1px solid var(--border);border-radius:3px;padding:0 18px 0 6px;font-size:12px;font-family:var(--font);outline:none;appearance:none;background:white url(\'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'10\\\' height=\\\'10\\\' viewBox=\\\'0 0 24 24\\\'%3E%3Cpath fill=\\\'%23888\\\' d=\\\'M7 10l5 5 5-5z\\\'/%3E%3C/svg%3E\') no-repeat right 4px center;color:#E07820;font-weight:700;cursor:pointer;"><option>High</option><option>Medium</option><option>Low</option></select>' +
+        '</div>' +
+        '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;border:1px solid var(--border);border-radius:3px;padding:3px 10px;">' +
+          '<input type="checkbox" style="accent-color:var(--teal);width:13px;height:13px;" /> Sign Off' +
+        '</label>' +
+      '</div>' +
+      '<div style="padding:10px 14px 6px;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:3px;">Intervention</div>' +
+        '<div style="font-size:12px;color:var(--text-primary);line-height:1.4;">' + gapGoal + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0;padding:8px 14px;border-top:1px solid var(--border-light);flex-wrap:wrap;">' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Status</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">In Progress</span>' +
+        '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Member Plan</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);line-height:1.4;">I will work with my care manager to achieve this goal.</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Start Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 90px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Target Date</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">N/A</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;padding-right:12px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created On</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">' + today + '</span>' +
+        '</div>' +
+        '<div style="flex:0 0 100px;display:flex;flex-direction:column;gap:3px;">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text-secondary);">Created By</span>' +
+          '<span style="font-size:12px;color:var(--text-primary);">Beatrice Kanya</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:6px 14px 12px;border-top:1px solid var(--border-light);">' +
+        '<a href="#" style="color:var(--link);display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;text-decoration:none;">' +
+          '<span class="material-icons" style="font-size:15px;">info_outline</span> Additional Information' +
+        '</a>' +
+      '</div>';
+
+    list.insertBefore(card, list.firstChild);
+    document.querySelectorAll('.gc-left-item').forEach(function(li) { li.classList.remove('active'); });
+    var cpNav3 = document.querySelector('.gc-left-item[data-left="care-plan"]');
+    if (cpNav3) cpNav3.classList.add('active');
+    document.querySelectorAll('.left-panel').forEach(function(p) { p.style.display = 'none'; p.classList.remove('active'); });
+    var cpPanel3 = document.getElementById('panel-care-plan');
+    if (cpPanel3) { cpPanel3.style.display = ''; cpPanel3.classList.add('active'); }
+    cpTier1Tab('team');
+    cpSubTab('overview');
+    setTimeout(function() { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
   }
 });
 

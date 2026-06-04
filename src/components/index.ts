@@ -9,3 +9,6 @@ export type { AvatarProps } from './Avatar/Avatar'
 
 export { Chip } from './Chip/Chip'
 export type { ChipProps } from './Chip/Chip'
+
+export { Alert } from './Alert/Alert'
+export type { AlertProps, AlertSeverity } from './Alert/Alert'

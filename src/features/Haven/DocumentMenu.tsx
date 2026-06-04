@@ -1,17 +1,17 @@
 import styles from './MemberDetailMenu.module.css'
 
 const PROMPTS = [
-  'Prepare me for a member call',
-  "Review member's current care plan",
-  'Show me the last update I did for the member',
+  'Help me make a SMART goal for the member',
+  'Help me document an outreach attempt',
+  'Help me document an opportunity, goal or intervention for the member',
 ]
 
-export interface SummarizeMenuProps {
+export interface DocumentMenuProps {
   onSelect: (prompt: string) => void
   onClose: () => void
 }
 
-export function SummarizeMenu({ onSelect, onClose }: SummarizeMenuProps) {
+export function DocumentMenu({ onSelect, onClose }: DocumentMenuProps) {
   return (
     <div className={styles.menu} role="menu">
       {PROMPTS.map((label) => (

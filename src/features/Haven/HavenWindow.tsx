@@ -583,7 +583,14 @@ export function HavenWindow({
   // ── FAB — always rendered ──
   const fabStyle: React.CSSProperties = sukiOpen ? { zIndex: 800 } : {}
 
-  const fab = isHome ? null : !fabExpanded ? (
+  const fab = isHome ? (
+    <div className={styles.fabCard}>
+      <button className={winState === 'closed' ? styles.fabHavenFilled : styles.fabHaven} onClick={openWindow} type="button" aria-label="Open Haven AI assistant">
+        <Icon name="AutoAwesome" size="md" color={winState === 'closed' ? 'inverse' : 'primary'} />
+        Haven
+      </button>
+    </div>
+  ) : !fabExpanded ? (
     <button
       className={styles.fabMinimized}
       style={fabStyle}
@@ -906,7 +913,7 @@ export function HavenWindow({
                 !sukiActionsReady && liveAlerts.length === 0 && !callInsightsOpen && (
                   <div className={panelStyles.welcomeWrap}>
                     {isHome
-                      ? <HomeWelcome onPrompt={sendMessage} />
+                      ? <HomeWelcome onPrompt={sendMessage} onPresetsClick={() => setPresetsOpen(true)} />
                       : <ChatWelcome onMemberDetails={() => setMenuOpen(true)} onSummarizeMenu={() => setSummarizeMenuOpen(true)} />
                     }
                   </div>
@@ -970,6 +977,7 @@ export function HavenWindow({
             <div className={panelStyles.bottom}>
               <AskHavenInput onSubmit={sendMessage} />
               <p className={panelStyles.disclaimer}>
+                Once closed, a chat can't be continued.{' '}
                 Check your responses for accuracy.{' '}
                 <button type="button" className={panelStyles.disclaimerLink} onClick={handleLearnMore}>
                   What this assistant has access to
@@ -979,7 +987,7 @@ export function HavenWindow({
           </div>
 
           {/* Preset prompts panel */}
-          {presetsOpen && !isHome && (
+          {presetsOpen && (
             <PresetPromptsPanel
               onClose={() => setPresetsOpen(false)}
               onSelectPrompt={(text) => { sendMessage(text); setPresetsOpen(false) }}

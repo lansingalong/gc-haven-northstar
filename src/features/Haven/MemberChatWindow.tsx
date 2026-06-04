@@ -13,11 +13,11 @@ interface ChatMsg {
 
 const MOCK_MESSAGES: Record<string, ChatMsg[]> = {
   'jackson-thomas': [
-    { id: '1', from: 'cm', senderName: 'Beatrice Kanya', text: "Hi Jackson, how have your blood sugar readings been this week? Is there anything I can support you with?", timestamp: '11/28/2025 2:10 PM' },
-    { id: '2', from: 'member', text: "They've been around 140 fasting. A bit high.", timestamp: '11/28/2025 2:13 PM' },
-    { id: '3', from: 'cm', senderName: 'Beatrice Kanya', text: "Thanks for tracking that. Are you remembering to take your metformin every morning?", timestamp: '11/28/2025 2:14 PM' },
-    { id: '4', from: 'member', text: "Yes, every morning with breakfast.", timestamp: '11/28/2025 2:16 PM' },
-    { id: '5', from: 'cm', senderName: 'Beatrice Kanya', text: "Great. Let's keep monitoring. Your next check-in is scheduled for next week.", timestamp: '11/28/2025 2:17 PM' },
+    { id: '1', from: 'cm', senderName: 'Beatrice Kanya', text: "Hi Jackson, how have you been? I wanted to check in on how the blood sugar logging has been going since we last spoke.", timestamp: '11/28/2025 2:10 PM' },
+    { id: '2', from: 'member', text: "Honestly, not great. I've missed a few days here and there. I kept forgetting to write it down.", timestamp: '11/28/2025 2:13 PM' },
+    { id: '3', from: 'cm', senderName: 'Beatrice Kanya', text: "I appreciate you being honest with me. Do you have a routine in the morning — like with meals or medications — where logging could fit in?", timestamp: '11/28/2025 2:14 PM' },
+    { id: '4', from: 'member', text: "I take my metformin with breakfast so I guess I could do it then, I just never really had a set habit for it.", timestamp: '11/28/2025 2:16 PM' },
+    { id: '5', from: 'cm', senderName: 'Beatrice Kanya', text: "That makes sense. Let me put together a goal for you around daily blood sugar tracking — something specific and easy to follow. Give me just a moment.", timestamp: '11/28/2025 2:17 PM' },
   ],
   'maria-rivera': [
     { id: '1', from: 'cm', senderName: 'Beatrice Kanya', text: "Hi Maria, how are you feeling today? Any shortness of breath?", timestamp: '12/1/2025 10:05 AM' },

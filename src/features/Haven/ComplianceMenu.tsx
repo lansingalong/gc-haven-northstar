@@ -1,24 +1,25 @@
 import styles from './MemberDetailMenu.module.css'
 
 const BASE_PROMPTS = [
-  "What is this member's current risk level?",
-  "What is this member's last recorded health indicator?",
-  "What services is this member eligible for?",
-  "What is this member's current medication list?",
-  "What are the missing care gaps for the member?",
+  "What's missing for URAC compliance?",
+  "Does this member have a consent on file?",
+  "When was the last outreach attempt?",
+  "Is this case overdue for a follow-up?",
+  "Are there any open quality gaps for this member?",
 ]
 
 const MEMBER_PROMPTS: Record<string, string[]> = {
-  'maria-rivera':   ["What is the member's ADL or IADL status?"],
+  'jackson-thomas': ["What are the member's HEDIS gaps for diabetes?"],
+  'maria-rivera':   ['Check authorization for home services'],
 }
 
-export interface MemberDetailMenuProps {
+export interface ComplianceMenuProps {
   onSelect: (prompt: string) => void
   onClose: () => void
   memberId?: string
 }
 
-export function MemberDetailMenu({ onSelect, onClose, memberId = '' }: MemberDetailMenuProps) {
+export function ComplianceMenu({ onSelect, onClose, memberId = '' }: ComplianceMenuProps) {
   const prompts = [...BASE_PROMPTS, ...(MEMBER_PROMPTS[memberId] ?? [])]
   return (
     <div className={styles.menu} role="menu">

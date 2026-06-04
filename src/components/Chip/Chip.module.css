@@ -3,12 +3,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
-  padding: 4px;
+  padding: 5px;
   background: var(--color-bg-default);
   border: none;
   border-radius: var(--radius-full);
   font-family: var(--font-family-base);
-  font-size: var(--font-size-xs);
+  font-size: 12px;
   font-weight: var(--font-weight-regular);
   line-height: 1rem;
   color: var(--color-text-primary);
@@ -18,11 +18,12 @@
 
 .clickable {
   cursor: pointer;
-  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid transparent;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .clickable:hover {
-  background: var(--color-action-hover);
+  border-color: rgba(0, 93, 159, 0.24);
   box-shadow: var(--shadow-1);
 }
 
@@ -40,6 +41,6 @@
 
 .label {
   padding: 0 var(--spacing-2) 0 var(--spacing-1);
-  font-size: var(--font-size-xs);
+  font-size: 12px;
   line-height: 1rem;
 }

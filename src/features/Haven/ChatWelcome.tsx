@@ -18,7 +18,7 @@ export function ChatWelcome({ onMemberDetails, onSummarizeMenu }: ChatWelcomePro
           label="Get member details"
           onClick={onMemberDetails}
           avatar={
-            <Avatar size={24}>
+            <Avatar size={26}>
               <img src={memberIcon} width={16} height={16} alt="" aria-hidden="true" />
             </Avatar>
           }
@@ -27,8 +27,8 @@ export function ChatWelcome({ onMemberDetails, onSummarizeMenu }: ChatWelcomePro
           label="Summarize for me"
           onClick={onSummarizeMenu}
           avatar={
-            <Avatar size={24}>
-              <Icon name="AutoAwesome" size="xs" color="action" />
+            <Avatar size={26}>
+              <Icon name="Article" size="xs" sx={{ color: 'var(--color-icon-navy)' }} />
             </Avatar>
           }
         />

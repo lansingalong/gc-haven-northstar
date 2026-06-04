@@ -2,15 +2,25 @@ import { useState } from 'react'
 import styles from './PresetPromptsPanel.module.css'
 import { Icon } from '@/components/Icons'
 
+const MEMBER_DETAIL_EXTRAS: Record<string, string[]> = {
+  'maria-rivera':   ["What is the member's ADL or IADL status?"],
+}
+
+const COMPLIANCE_EXTRAS: Record<string, string[]> = {
+  'jackson-thomas': ["What are the member's HEDIS gaps for diabetes?"],
+  'maria-rivera':   ['Check authorization for home services'],
+}
+
 interface PresetPromptsPanelProps {
   onClose: () => void
   onSelectPrompt: (text: string) => void
   memberName?: string
+  memberId?: string
 }
 
 const DEFAULT_VISIBLE = 3
 
-function getCategories(firstName: string) {
+function getCategories(firstName: string, memberId: string) {
   return [
     {
       icon: 'AccountBox' as const,
@@ -20,17 +30,37 @@ function getCategories(firstName: string) {
         "What is this member's last recorded health indicator?",
         "What services is this member eligible for?",
         "What is this member's current medication list?",
+        ...(MEMBER_DETAIL_EXTRAS[memberId] ?? []),
       ],
     },
     {
-      icon: 'AutoAwesome' as const,
+      icon: 'Article' as const,
       label: 'Summarize for Me',
       prompts: [
-        'Summarize what I need before calling the member',
-        'Summarize my outreach attempts for this member',
-        'Summarize a catch-up since last conversation',
-        'Summarize clinical changes since last conversation',
-        'Summarize a care plan review for the member',
+        'Prepare me for a member call',
+        "Review member's current care plan",
+        'Show me the last update I did for the member',
+      ],
+    },
+    {
+      icon: 'VerifiedUser' as const,
+      label: 'Check Compliance',
+      prompts: [
+        "What's missing for URAC compliance?",
+        "Does this member have a consent on file?",
+        "When was the last outreach attempt?",
+        "Is this case overdue for a follow-up?",
+        "Are there any open quality gaps for this member?",
+        ...(COMPLIANCE_EXTRAS[memberId] ?? []),
+      ],
+    },
+    {
+      icon: 'Description' as const,
+      label: 'Help Me Document',
+      prompts: [
+        'Help me make a SMART goal for the member',
+        'Help me document an outreach attempt',
+        'Help me document an opportunity, goal or intervention for the member',
       ],
     },
     {
@@ -77,9 +107,9 @@ function getCategories(firstName: string) {
   ]
 }
 
-export function PresetPromptsPanel({ onClose, onSelectPrompt, memberName = '' }: PresetPromptsPanelProps) {
+export function PresetPromptsPanel({ onClose, onSelectPrompt, memberName = '', memberId = '' }: PresetPromptsPanelProps) {
   const firstName = memberName.split(' ')[0] || 'this member'
-  const categories = getCategories(firstName)
+  const categories = getCategories(firstName, memberId)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   function handleSelect(prompt: string) {
