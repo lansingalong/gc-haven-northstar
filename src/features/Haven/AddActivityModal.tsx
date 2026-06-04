@@ -26,6 +26,10 @@ export function AddActivityModal({ config, memberName, onClose, onAdd }: AddActi
   const [priority, setPriority] = useState('')
   const [script, setScript] = useState('')
   const [workQueue, setWorkQueue] = useState(false)
+  const [recurring, setRecurring] = useState(false)
+  const [programActivity, setProgramActivity] = useState(false)
+  const [comments, setComments] = useState('')
+  const [notesViewable, setNotesViewable] = useState<'all' | 'internal'>('internal')
 
   const handleAdd = (andClose: boolean) => {
     onAdd?.()
@@ -183,11 +187,48 @@ export function AddActivityModal({ config, memberName, onClose, onAdd }: AddActi
             </div>
           </div>
 
-          {/* Enter Member Contact */}
+          {/* Recurring + Program Activity */}
           <div className={styles.row}>
-            <div className={styles.field}>
-              <label className={styles.label}>Enter Member Contact</label>
-              <input className={styles.input} type="text" />
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} className={styles.checkboxInput} />
+              <span className={`${styles.checkbox} ${recurring ? styles.checkboxChecked : ''}`} />
+              Recurring Activity
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={programActivity} onChange={e => setProgramActivity(e.target.checked)} className={styles.checkboxInput} />
+              <span className={`${styles.checkbox} ${programActivity ? styles.checkboxChecked : ''}`} />
+              Program Activity
+            </label>
+          </div>
+
+          {/* Comments */}
+          <div className={styles.field}>
+            <label className={styles.label}>Enter Comments / Reasons</label>
+            <textarea
+              className={styles.textarea}
+              value={comments}
+              onChange={e => setComments(e.target.value)}
+              rows={4}
+            />
+          </div>
+
+          {/* Notes viewable by */}
+          <div className={styles.notesSection}>
+            <span className={styles.sectionLabel}>Notes viewable by</span>
+            <div className={styles.radioGroup}>
+              {(['all', 'internal'] as const).map(v => (
+                <label key={v} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    className={styles.radioInput}
+                    name="notesViewable"
+                    checked={notesViewable === v}
+                    onChange={() => setNotesViewable(v)}
+                  />
+                  <span className={`${styles.radioCircle} ${notesViewable === v ? styles.radioCircleActive : ''}`} />
+                  {v === 'all' ? 'All Users' : 'Internal Users Only'}
+                </label>
+              ))}
             </div>
           </div>
         </div>
