@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Icon } from '@/components/Icons'
 import { Typography } from '@/components'
+import { AddActivityModal, type ActivityConfig } from './AddActivityModal'
 import styles from './HomeWelcome.module.css'
 
 export interface HomeWelcomeProps {
@@ -20,18 +21,18 @@ const SUGGESTED_TASKS = [
 
 const ALERTS = [
   { label: 'ER Visit', member: 'Maria Rivera', detail: 'visited ER on 5/30', severity: 'warning' as const, action: 'Schedule a follow-up call to review discharge plan' },
-  { label: 'Medication', member: 'Jackson Thomas', detail: 'Metformin refill overdue', severity: 'warning' as const, action: 'Contact pharmacy and confirm refill with member' },
-  { label: 'Missed Appt', member: 'Robert Chen', detail: 'missed PCP appointment on 5/28', severity: 'error' as const, action: 'Reach out to reschedule and identify any barriers' },
-  { label: 'Assessment Overdue', member: 'Sarah Williams', detail: 'HRA not completed — due 5/15', severity: 'error' as const, action: 'Call member to complete health risk assessment' },
+  { label: 'Rx Change', member: 'Jackson Thomas', detail: 'Glipizide 10mg discontinued, Jardiance 10mg started on 6/1', severity: 'warning' as const, action: 'Update medication list in care plan and educate member on new dosing schedule' },
+{ label: 'Assessment Overdue', member: 'Sarah Williams', detail: 'HRA not completed — due 5/15', severity: 'error' as const, action: 'Call member to complete health risk assessment' },
 ]
 
-function Card({ icon, iconColor, title, children }: {
+function Card({ icon, iconColor, title, defaultOpen = true, children }: {
   icon: string
   iconColor: 'primary' | 'error'
   title: string
+  defaultOpen?: boolean
   children: React.ReactNode
 }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(defaultOpen)
   return (
     <div className={styles.card}>
       <button className={styles.cardHeader} type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}>
@@ -47,8 +48,10 @@ function Card({ icon, iconColor, title, children }: {
 export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [taskListOpen, setTaskListOpen] = useState(false)
+  const [openModal, setOpenModal] = useState<typeof ALERTS[number] | null>(null)
 
   const checkedTasks = ALERTS.filter(a => checked.has(a.member))
+  const allChecked = checked.size === ALERTS.length
 
   function toggle(member: string) {
     setChecked(prev => {
@@ -59,9 +62,20 @@ export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
     if (!taskListOpen && !checked.has(member)) setTaskListOpen(true)
   }
 
+  function selectAll() {
+    if (allChecked) {
+      setChecked(new Set())
+      setTaskListOpen(false)
+    } else {
+      setChecked(new Set(ALERTS.map(a => a.member)))
+      setTaskListOpen(true)
+    }
+  }
+
   return (
+    <>
     <div className={styles.root}>
-      <Typography variant="h4">Welcome back</Typography>
+      <Typography variant="h4">Welcome back, Beatrice</Typography>
 
       <div className={styles.cards}>
         <Card icon="NotificationImportant" iconColor="error" title="Needs your attention">
@@ -90,6 +104,13 @@ export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
             )
           })}
 
+          <div className={styles.selectAllRow}>
+            <button className={styles.selectAllBtn} type="button" onClick={selectAll}>
+              <Icon name={allChecked ? 'CheckBox' : 'CheckBoxOutlineBlank'} size="sm" color="action" />
+              {allChecked ? 'Deselect all' : 'Select all'}
+            </button>
+          </div>
+
           {/* Task list — shown once at least one is checked */}
           {checkedTasks.length > 0 && (
             <div className={styles.taskList}>
@@ -106,19 +127,16 @@ export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
               {taskListOpen && (
                 <div className={styles.taskListItems}>
                   {checkedTasks.map(t => (
-                    <button
-                      key={t.member}
-                      className={styles.taskListItem}
-                      type="button"
-                      onClick={() => onPrompt(`Open outstanding activities for ${t.member}`)}
-                    >
-                      <Icon name="RadioButtonUnchecked" size="sm" color="action" />
-                      <span className={styles.taskListItemText}>
+                    <div key={t.member} className={styles.taskListItem}>
+                      <button
+                        className={styles.taskLink}
+                        type="button"
+                        onClick={() => setOpenModal(t)}
+                      >
                         <span className={styles.alertMember}>{t.member}</span>
                         {' — '}{t.action}
-                      </span>
-                      <Icon name="OpenInNew" size="xs" color="primary" />
-                    </button>
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -126,7 +144,7 @@ export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
           )}
         </Card>
 
-        <Card icon="History" iconColor="primary" title="Continue where you left off">
+        <Card icon="History" iconColor="primary" title="Continue where you left off" defaultOpen={false}>
           {CONTINUE_ITEMS.map(a => (
             <button key={a.text} className={styles.actionRow} type="button" onClick={() => onPrompt(a.text)}>
               <Icon name={a.icon as never} size="sm" color="action" />
@@ -145,5 +163,20 @@ export function HomeWelcome({ onPrompt }: HomeWelcomeProps) {
         </Card>
       </div>
     </div>
+
+    {openModal && (
+      <AddActivityModal
+        config={{
+          title: 'Add Activity',
+          activityType: 'Follow-up',
+          contactType: 'Member - Phone',
+          scheduledDate: '',
+        } as ActivityConfig}
+        memberName={openModal.member}
+        onClose={() => setOpenModal(null)}
+        onAdd={() => setOpenModal(null)}
+      />
+    )}
+    </>
   )
 }
