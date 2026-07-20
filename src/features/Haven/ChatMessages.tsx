@@ -8,10 +8,12 @@ import thumbUpFill from '@/assets/thumb_up_fill.png'
 import thumbDown from '@/assets/thumb_down.png'
 import thumbDownFill from '@/assets/thumb_down_fill.png'
 import styles from './ChatMessages.module.css'
+import { AddNoteModal } from './AddNoteModal'
 import { SmartGoalCard, type SmartGoalData, type SmartGoalAddedPayload } from './SmartGoalCard'
 import { UracChecklistCard } from './UracChecklistCard'
 import { CarePlanSummaryCard } from './CarePlanSummaryCard'
 import { LastUpdateCard, type LastUpdateData } from './LastUpdateCard'
+import { PreCallBriefCard, type PreCallBriefCardData } from './PreCallBriefCard'
 
 export interface FollowUpChip {
   label: string
@@ -33,12 +35,15 @@ export interface Message {
   uracChecklist?: true
   carePlanSummary?: true
   lastUpdate?: LastUpdateData
+  preCallBriefCard?: PreCallBriefCardData
+  preCallBriefOnlyRisk?: boolean
 }
 
 export interface ChatMessagesProps {
   messages: Message[]
   loading: boolean
   thinkingSteps?: string[] | null
+  memberName?: string
   onFeedback?: (id: string, value: 'up' | 'down') => void
   onGoalAdded?: (payload: SmartGoalAddedPayload) => void
   onFollowUpChip?: (query: string) => void
@@ -116,6 +121,7 @@ function renderContent(
 /* ── Assistant message ── */
 function AssistantMessage({
   msg,
+  memberName,
   onFeedback,
   onGoalAdded,
   onFollowUpChip,
@@ -123,6 +129,7 @@ function AssistantMessage({
   onNavigateActivity,
 }: {
   msg: Message
+  memberName?: string
   onFeedback?: (id: string, value: 'up' | 'down') => void
   onGoalAdded?: (payload: SmartGoalAddedPayload) => void
   onFollowUpChip?: (query: string) => void
@@ -130,6 +137,7 @@ function AssistantMessage({
   onNavigateActivity?: () => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [noteModalOpen, setNoteModalOpen] = useState(false)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(msg.content)
@@ -170,6 +178,7 @@ function AssistantMessage({
           onNavigateActivity={onNavigateActivity}
         />
       )}
+      {msg.preCallBriefCard && <PreCallBriefCard data={msg.preCallBriefCard} onlyRisk={msg.preCallBriefOnlyRisk} />}
       {msg.followUp && <p className={styles.followUpText}>{msg.followUp}</p>}
       {msg.followUpChips && msg.followUpChips.length > 0 && (
         <div className={styles.followUpChips}>
@@ -213,6 +222,10 @@ function AssistantMessage({
           <img src={copied ? checkIcon : contentCopy} width={16} height={16} alt="" aria-hidden="true" />
           <span>{copied ? 'Copied' : 'Copy'}</span>
         </button>
+        <button className={styles.actionBtn} type="button" aria-label="Save to Notes" title="Save to Notes" onClick={() => setNoteModalOpen(true)}>
+          <Icon name="BookmarkBorder" size="sm" aria-hidden />
+          <span>Save to Notes</span>
+        </button>
         <div className={styles.actionDivider} />
         <button className={`${styles.actionBtn} ${msg.feedback === 'up' ? styles.actionBtnActive : ''}`} onClick={() => onFeedback?.(msg.id, 'up')} type="button" aria-label="Helpful" title="Helpful">
           <img src={msg.feedback === 'up' ? thumbUpFill : thumbUp} width={16} height={16} alt="" aria-hidden="true" />
@@ -221,12 +234,63 @@ function AssistantMessage({
           <img src={msg.feedback === 'down' ? thumbDownFill : thumbDown} width={16} height={16} alt="" aria-hidden="true" />
         </button>
       </div>
+      {noteModalOpen && (
+        <AddNoteModal
+          initialContent={msg.content}
+          memberName={memberName ?? ''}
+          memberId={undefined}
+          onClose={() => setNoteModalOpen(false)}
+        />
+      )}
     </div>
   )
 }
 
+/* ── Reusable feedback bar for inline assistant bubbles ── */
+export function MessageFeedbackBar({ content, memberName, memberId }: { content: string; memberName?: string; memberId?: string }) {
+  const [copied, setCopied] = useState(false)
+  const [noteModalOpen, setNoteModalOpen] = useState(false)
+  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 5000)
+  }
+
+  return (
+    <>
+      <div className={styles.actions}>
+        <button className={`${styles.actionBtn} ${copied ? styles.actionBtnActive : ''}`} onClick={handleCopy} type="button" aria-label="Copy response" title={copied ? 'Copied!' : 'Copy'}>
+          <img src={copied ? checkIcon : contentCopy} width={16} height={16} alt="" aria-hidden="true" />
+          <span>{copied ? 'Copied' : 'Copy'}</span>
+        </button>
+        <button className={styles.actionBtn} type="button" aria-label="Save to Notes" title="Save to Notes" onClick={() => setNoteModalOpen(true)}>
+          <Icon name="BookmarkBorder" size="sm" aria-hidden />
+          <span>Save to Notes</span>
+        </button>
+        <div className={styles.actionDivider} />
+        <button className={`${styles.actionBtn} ${feedback === 'up' ? styles.actionBtnActive : ''}`} onClick={() => setFeedback(f => f === 'up' ? null : 'up')} type="button" aria-label="Helpful" title="Helpful">
+          <img src={feedback === 'up' ? thumbUpFill : thumbUp} width={16} height={16} alt="" aria-hidden="true" />
+        </button>
+        <button className={`${styles.actionBtn} ${feedback === 'down' ? styles.actionBtnActive : ''}`} onClick={() => setFeedback(f => f === 'down' ? null : 'down')} type="button" aria-label="Not helpful" title="Not helpful">
+          <img src={feedback === 'down' ? thumbDownFill : thumbDown} width={16} height={16} alt="" aria-hidden="true" />
+        </button>
+      </div>
+      {noteModalOpen && (
+        <AddNoteModal
+          initialContent={content}
+          memberName={memberName ?? ''}
+          memberId={memberId}
+          onClose={() => setNoteModalOpen(false)}
+        />
+      )}
+    </>
+  )
+}
+
 /* ── Main component ── */
-export function ChatMessages({ messages, loading, thinkingSteps, onFeedback, onGoalAdded, onFollowUpChip, onNavigateNote, onNavigateActivity }: ChatMessagesProps) {
+export function ChatMessages({ messages, loading, thinkingSteps, memberName, onFeedback, onGoalAdded, onFollowUpChip, onNavigateNote, onNavigateActivity }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -243,6 +307,7 @@ export function ChatMessages({ messages, loading, thinkingSteps, onFeedback, onG
           <AssistantMessage
             key={msg.id}
             msg={msg}
+            memberName={memberName}
             onFeedback={onFeedback}
             onGoalAdded={onGoalAdded}
             onFollowUpChip={onFollowUpChip}
