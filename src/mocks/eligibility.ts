@@ -53,14 +53,14 @@ export const mockEligibility: MemberEligibility = {
   eligibilities: [
     {
       lobBenID: 1,
-      uniqueEligibilityID: 'eligibility-AH58319473-20240101',
+      uniqueEligibilityID: 'eligibility-AH58319473-20260101',
       eligiblityRecords: [
         { level: 1, code: 'AMB', desc: 'Ambetter Health' },
         { level: 2, code: 'CA', desc: 'California' },
         { level: 3, code: 'SLV', desc: 'Ambetter Enhanced Care (Silver)' },
       ],
-      startDate: '2024-01-01',
-      endDate: '2024-12-31',
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
       status: 'Active',
       eligibilityPath: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
       planType: 'Commercial',
@@ -71,14 +71,14 @@ export const mockEligibility: MemberEligibility = {
     },
     {
       lobBenID: 2,
-      uniqueEligibilityID: 'eligibility-AH58319473-MCD-20230101',
+      uniqueEligibilityID: 'eligibility-AH58319473-MCD-20250101',
       eligiblityRecords: [
         { level: 1, code: 'MCD', desc: 'Medicaid' },
         { level: 2, code: 'VA', desc: 'Virginia' },
         { level: 3, code: 'MA00', desc: 'Virginia Medicaid Managed Care' },
       ],
-      startDate: '2023-01-01',
-      endDate: '2024-12-31',
+      startDate: '2025-01-01',
+      endDate: '2026-12-31',
       status: 'Active',
       eligibilityPath: 'Medicaid (MCD) >> Virginia (VA) >> Virginia Medicaid Managed Care (MA00)',
       planType: 'Medicaid',

@@ -12,12 +12,46 @@ export interface MemberHeaderProps {
   onSukiClick?: () => void
   onPresetsClick?: () => void
   onHistoryClick?: () => void
+  onClose?: () => void
 }
 
-export function MemberHeader({ memberName, phone, memberId, pcp, onSukiClick, onPresetsClick, onHistoryClick }: MemberHeaderProps) {
+export interface DashboardHeaderProps {
+  onPresetsClick?: () => void
+  onHistoryClick?: () => void
+  onClose?: () => void
+}
+
+export function DashboardHeader({ onPresetsClick, onHistoryClick, onClose }: DashboardHeaderProps) {
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   return (
     <div className={styles.root}>
-      {/* Row 1 — member name */}
+      <div className={styles.nameRow} style={{ marginBottom: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography variant="h6">Welcome back, Beatrice</Typography>
+          <Typography variant="caption">{today}</Typography>
+        </div>
+        <div className={styles.headerActions}>
+          <button className={styles.promptsBtn} type="button" aria-label="Preset prompts" onClick={onPresetsClick}>
+            <img src={promptIcon} width={14} height={12} alt="" aria-hidden="true" />
+          </button>
+          <button className={styles.historyBtn} type="button" aria-label="View chat history" onClick={onHistoryClick}>
+            <img src={dockToRightIcon} width={14} height={14} alt="" aria-hidden="true" />
+          </button>
+          <button className={styles.closeBtn} type="button" aria-label="Close Haven" onClick={onClose}>
+            <span style={{ display: 'flex', color: '#000000' }}>
+              <Icon name="Close" size="sm" color="action" />
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function MemberHeader({ memberName, phone, memberId, pcp, onSukiClick, onPresetsClick, onHistoryClick, onClose }: MemberHeaderProps) {
+  return (
+    <div className={styles.root}>
+      {/* Row 1 - member name */}
       <div className={styles.nameRow}>
         <Icon name="Person" size="md" color="action" />
         <Typography variant="h6">{memberName}</Typography>
@@ -31,10 +65,15 @@ export function MemberHeader({ memberName, phone, memberId, pcp, onSukiClick, on
           <button className={styles.historyBtn} type="button" aria-label="View chat history" onClick={onHistoryClick}>
             <img src={dockToRightIcon} width={14} height={14} alt="" aria-hidden="true" />
           </button>
+          <button className={styles.closeBtn} type="button" aria-label="Close Haven" onClick={onClose}>
+            <span style={{ display: 'flex', color: '#000000' }}>
+              <Icon name="Close" size="sm" color="action" />
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Row 2 — data fields */}
+      {/* Row 2 - data fields */}
       <div className={styles.fieldsRow}>
         <div className={styles.field}>
           <Typography variant="caption">Preferred Phone Number</Typography>

@@ -8,7 +8,7 @@
   font-family: var(--font-family-base);
 }
 
-/* ── Header ── */
+/* ── Header (standalone card only) ── */
 .header {
   display: flex;
   align-items: center;
@@ -46,24 +46,32 @@
 
 /* ── Section ── */
 .section {
-  padding: 14px 16px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--color-divider);
 }
 
-.section:last-child {
+.sectionLast {
   border-bottom: none;
 }
 
-.sectionLabel {
+/* Section label matches "Call Summary" style — sm, medium, black, no uppercase */
+.sectionLabelRow {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+  gap: 6px;
   margin-bottom: 10px;
+}
+
+.sectionLabelRow .sectionLabel {
+  margin-bottom: 0;
+}
+
+.sectionLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin: 0 0 10px;
+  line-height: 1.35;
 }
 
 .summaryText {
@@ -74,174 +82,127 @@
   white-space: pre-line;
 }
 
-/* ── Alert cards ── */
-.alertStack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.alertCard {
-  background: var(--color-warning-light);
-  border: 1px solid #fdd09b;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.alertCardInner {
+/* ── Alerts — flat list with divider ── */
+.alertList {
   display: flex;
   flex-direction: column;
 }
 
-.alertCardTop {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 11px 13px;
+.alertRow {
+  padding: 10px 0;
 }
 
-.alertCardBody {
-  flex: 1;
-  min-width: 0;
+.alertRowDivider {
+  border-bottom: 1px solid var(--color-divider);
+  margin-bottom: 0;
+  padding-bottom: 12px;
 }
 
-.alertDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-warning);
-  flex-shrink: 0;
-  margin-top: 4px;
+.alertRow + .alertRow {
+  padding-top: 12px;
 }
 
 .alertTitle {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: #7c3700;
-  margin: 0 0 4px;
+  color: var(--color-text-primary);
+  margin: 0 0 3px;
   line-height: 1.35;
 }
 
 .alertDetail {
   font-size: var(--font-size-xs);
-  color: #92400e;
-  margin: 0 0 8px;
+  color: var(--color-text-secondary);
+  margin: 0 0 6px;
   line-height: 1.5;
-}
-
-/* Toggle stays amber-brown — readable on the warning background, no blue-on-orange clash */
-.alertTasksToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: none;
-  border: none;
-  padding: 2px 0;
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: #7c3700;
-  cursor: pointer;
-  line-height: 1.4;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.alertTasksToggle:hover { color: #5a2800; }
-
-.alertTasksToggle:focus-visible {
-  outline: 2px solid #92400e;
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-.alertTaskList {
-  border-top: 1px solid #fdd09b;
-  padding: 10px 13px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  background: #fffaf4;
 }
 
 .alertTaskRow {
   display: flex;
   align-items: center;
-  gap: 9px;
+  padding-left: 12px;
+  border-left: 2px solid var(--color-divider);
+  margin-top: 4px;
 }
 
-.alertTaskCheck {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  padding: 2px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  border-radius: 50%;
-  transition: opacity var(--transition-fast);
-}
-
-.alertTaskCheck:hover { opacity: 0.75; }
-
-.alertTaskCheck:focus-visible {
-  outline: 2px solid #92400e;
-  outline-offset: 2px;
-}
-
-.alertTaskInput {
-  flex: 1;
+.alertTaskText {
   font-family: var(--font-family-base);
   font-size: var(--font-size-xs);
   color: var(--color-text-primary);
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.14);
-  border-radius: var(--radius-sm);
-  padding: 6px 9px;
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  min-width: 0;
   line-height: 1.4;
 }
 
-.alertTaskInput:focus {
-  border-color: #92400e;
-  box-shadow: 0 0 0 2px rgba(146,64,14,0.15);
-}
-
-.alertTaskInputDone {
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
-}
-
-.alertAddTaskBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.alertTaskLink {
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  color: var(--color-primary);
   background: none;
-  border: 1px dashed rgba(146,64,14,0.4);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  line-height: 1.4;
+  display: inline;
+  width: auto;
+}
+
+.alertTaskLink:hover { color: var(--color-primary-dark); }
+
+.alertTaskLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.alertTaskDone {
   font-family: var(--font-family-base);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: #7c3700;
+  color: var(--color-text-secondary);
+  margin-left: 5px;
+  line-height: 1.4;
+}
+
+.editLink {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
   cursor: pointer;
-  width: 100%;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  line-height: 1.4;
 }
 
-.alertAddTaskBtn:hover {
-  background: rgba(146,64,14,0.06);
-  border-color: rgba(146,64,14,0.65);
+.editLink:hover { color: var(--color-primary-dark); }
+
+.insightActionLink {
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  line-height: 1.4;
 }
 
-.alertAddTaskBtn:focus-visible {
-  outline: 2px solid #92400e;
+.insightActionLink:hover { color: var(--color-primary-dark); }
+
+.insightActionLink:focus-visible {
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+  border-radius: 2px;
 }
 
-/* ── Insight cards ── */
+/* ── Insight cards — reduced tint ── */
 .insightStack {
   display: flex;
   flex-direction: column;
@@ -249,17 +210,17 @@
 }
 
 .insightCard {
-  background: var(--color-primary-light);
-  border: 1px solid #b3d4f0;
+  background: #f0f6fc;
+  border: 1px solid #d4e6f5;
   border-radius: var(--radius-sm);
-  padding: 11px 13px;
+  padding: 10px 12px;
 }
 
 .insightTitle {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-primary);
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   line-height: 1.35;
 }
 
@@ -270,10 +231,10 @@
   line-height: 1.5;
 }
 
-/* ── Missed item card ── */
+/* ── Not yet covered — white, no yellow ── */
 .missedCard {
-  background: #fefce8;
-  border: 1px solid #fde68a;
+  background: var(--color-bg-default);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
   padding: 11px 13px;
 }
@@ -289,15 +250,16 @@
 .missedCardTitle {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: #713f12;
+  color: var(--color-text-primary);
   line-height: 1.3;
 }
 
 .missedCardTag {
   font-size: 10px;
   font-weight: var(--font-weight-medium);
-  color: #92400e;
-  background: #fed7aa;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-full);
   padding: 2px 8px;
   white-space: nowrap;
@@ -306,7 +268,7 @@
 
 .missedCardDetail {
   font-size: var(--font-size-xs);
-  color: #78350f;
+  color: var(--color-text-secondary);
   margin: 0 0 10px;
   line-height: 1.5;
 }
@@ -319,9 +281,9 @@
   width: 100%;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid #f59e0b;
+  border: 1px solid var(--color-primary);
   background: transparent;
-  color: #92400e;
+  color: var(--color-primary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   font-family: var(--font-family-base);
@@ -329,10 +291,10 @@
   transition: background var(--transition-fast);
 }
 
-.missedCardBtn:hover { background: #fde68a; }
+.missedCardBtn:hover { background: var(--color-primary-light); }
 
 .missedCardBtn:focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -340,7 +302,7 @@
 
 .missedCardBtnDone {
   background: var(--color-success-light);
-  border-color: #6ee7b7;
+  border-color: var(--color-success);
   color: var(--color-success);
 }
 
@@ -348,7 +310,7 @@
 
 /* ── Save footer ── */
 .saveFooter {
-  padding: 14px 16px 16px;
+  padding: 12px 16px 14px;
   border-top: 1px solid var(--color-divider);
 }
 

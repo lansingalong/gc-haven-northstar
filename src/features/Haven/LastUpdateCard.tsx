@@ -37,7 +37,7 @@ export function LastUpdateCard({ data, onNavigateNote, onNavigateActivity }: Las
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <Icon name="Description" size="sm" color="primary" />
-          <span className={styles.cardTitle}>Clinical Note — {data.note.date}</span>
+          <span className={styles.cardTitle}>Clinical Note - {data.note.date}</span>
           {onNavigateNote && (
             <button type="button" className={styles.linkBtn} onClick={onNavigateNote}>
               View
@@ -54,7 +54,7 @@ export function LastUpdateCard({ data, onNavigateNote, onNavigateActivity }: Las
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <Icon name="CheckCircleOutline" size="sm" color="primary" />
-          <span className={styles.cardTitle}>{data.activity.type} — {data.activity.date}</span>
+          <span className={styles.cardTitle}>{data.activity.type} - {data.activity.date}</span>
           {onNavigateActivity && (
             <button type="button" className={styles.linkBtn} onClick={onNavigateActivity}>
               View

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './AddActivityModal.module.css'
 
 export interface ActivityConfig {
@@ -36,7 +37,7 @@ export function AddActivityModal({ config, memberName, onClose, onAdd }: AddActi
     if (andClose) onClose()
   }
 
-  return (
+  return createPortal(
     <div className={styles.backdrop} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={config.title}>
 
@@ -239,6 +240,7 @@ export function AddActivityModal({ config, memberName, onClose, onAdd }: AddActi
           <button className={styles.addCloseBtn} type="button" onClick={() => handleAdd(true)}>Add and Close</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

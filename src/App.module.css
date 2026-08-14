@@ -1,0 +1,44 @@
+.dayBanner {
+  display: flex;
+  align-items: stretch;
+  background: #000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.dayTab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: background 150ms ease;
+  text-align: left;
+}
+
+.dayTab:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.dayTab:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.dayTabActive {
+  background: rgba(255, 255, 255, 0.12);
+  border-bottom: 2px solid #4fc3f7;
+}
+
+.dayLabel {
+  font-family: 'Roboto', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+}
+

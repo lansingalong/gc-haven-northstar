@@ -7,7 +7,7 @@ interface ChatMsg {
   text: string
   /** Full datetime string shown above CM bubbles */
   timestamp: string
-  /** Care manager display name — CM messages only */
+  /** Care manager display name - CM messages only */
   senderName?: string
 }
 
@@ -15,9 +15,9 @@ const MOCK_MESSAGES: Record<string, ChatMsg[]> = {
   'jackson-thomas': [
     { id: '1', from: 'cm', senderName: 'Beatrice Kanya', text: "Hi Jackson, how have you been? I wanted to check in on how the blood sugar logging has been going since we last spoke.", timestamp: '11/28/2025 2:10 PM' },
     { id: '2', from: 'member', text: "Honestly, not great. I've missed a few days here and there. I kept forgetting to write it down.", timestamp: '11/28/2025 2:13 PM' },
-    { id: '3', from: 'cm', senderName: 'Beatrice Kanya', text: "I appreciate you being honest with me. Do you have a routine in the morning — like with meals or medications — where logging could fit in?", timestamp: '11/28/2025 2:14 PM' },
+    { id: '3', from: 'cm', senderName: 'Beatrice Kanya', text: "I appreciate you being honest with me. Do you have a routine in the morning - like with meals or medications - where logging could fit in?", timestamp: '11/28/2025 2:14 PM' },
     { id: '4', from: 'member', text: "I take my metformin with breakfast so I guess I could do it then, I just never really had a set habit for it.", timestamp: '11/28/2025 2:16 PM' },
-    { id: '5', from: 'cm', senderName: 'Beatrice Kanya', text: "That makes sense. Let me put together a goal for you around daily blood sugar tracking — something specific and easy to follow. Give me just a moment.", timestamp: '11/28/2025 2:17 PM' },
+    { id: '5', from: 'cm', senderName: 'Beatrice Kanya', text: "That makes sense. Let me put together a goal for you around daily blood sugar tracking - something specific and easy to follow. Give me just a moment.", timestamp: '11/28/2025 2:17 PM' },
   ],
   'maria-rivera': [
     { id: '1', from: 'cm', senderName: 'Beatrice Kanya', text: "Hi Maria, how are you feeling today? Any shortness of breath?", timestamp: '12/1/2025 10:05 AM' },
@@ -31,7 +31,7 @@ const MOCK_MESSAGES: Record<string, ChatMsg[]> = {
 const MEMBER_DOBS: Record<string, string> = {
   'jackson-thomas': '01/01/1970',
   'maria-rivera': '07/22/1958',
-  'robert-chen': '11/08/1965',
+  'marcus-webb': '11/08/1965',
   'sarah-williams': '09/30/1980',
   'james-oconnor': '05/17/1948',
 }
@@ -39,7 +39,7 @@ const MEMBER_DOBS: Record<string, string> = {
 const MEMBER_IDS: Record<string, string> = {
   'jackson-thomas': 'AH58319473',
   'maria-rivera': 'AH72940158',
-  'robert-chen': 'AH36582091',
+  'marcus-webb': 'AH36582091',
   'sarah-williams': 'AH91427634',
   'james-oconnor': 'AH60273845',
 }
@@ -49,7 +49,7 @@ export interface MemberChatWindowProps {
   /** Member key (e.g. 'jackson-thomas') used to look up mock data */
   memberKey: string
   onClose: () => void
-  /** Bottom edge of the Haven window (px from viewport top) — aligns this window's bottom to match */
+  /** Bottom edge of the Haven window (px from viewport top) - aligns this window's bottom to match */
   havenBottomY?: number
   /** Override z-index (e.g. lower when a modal overlay is open) */
   zIndex?: number
@@ -64,7 +64,7 @@ const MIN_H = 300
 type ResizeDir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
 export function MemberChatWindow({ memberName, memberKey, onClose, havenBottomY, zIndex }: MemberChatWindowProps) {
-  const dob = MEMBER_DOBS[memberKey] ?? '—'
+  const dob = MEMBER_DOBS[memberKey] ?? '-'
   const displayId = MEMBER_IDS[memberKey] ?? memberKey
   const initialMsgs = MOCK_MESSAGES[memberKey] ?? []
 

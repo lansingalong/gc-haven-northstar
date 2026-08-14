@@ -41,14 +41,14 @@ export interface AssessmentSubmission {
   questions: AssessmentQuestion[]
 }
 
-// Activity summary list — /v2/ActivitySummary/Script
+// Activity summary list - /v2/ActivitySummary/Script
 export const mockActivitySummary: ScriptSummary[] = [
   {
     submissionId: 'SUB-2024-001',
     assessmentName: 'Health Risk Assessment (HRA)',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2024-02-14T14:30:00.000Z',
-    performedOn: '2024-02-14T14:00:00.000Z',
+    assessmentCompletedDateTime: '2026-02-14T14:30:00.000Z',
+    performedOn: '2026-02-14T14:00:00.000Z',
     performedBy: 'prudhvi.rajan',
     programName: 'Care Coordination',
     eligibilityPath: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
@@ -62,8 +62,8 @@ export const mockActivitySummary: ScriptSummary[] = [
     submissionId: 'SUB-2024-002',
     assessmentName: 'Adult LTSS Reassessment',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2024-01-10T10:15:00.000Z',
-    performedOn: '2024-01-10T09:45:00.000Z',
+    assessmentCompletedDateTime: '2026-01-10T10:15:00.000Z',
+    performedOn: '2026-01-10T09:45:00.000Z',
     performedBy: 'prudhvi.rajan',
     programName: 'Chronic Disease Management',
     eligibilityPath: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
@@ -77,8 +77,8 @@ export const mockActivitySummary: ScriptSummary[] = [
     submissionId: 'SUB-2023-012',
     assessmentName: 'PHQ-9 Depression Screening',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2023-11-20T13:00:00.000Z',
-    performedOn: '2023-11-20T12:30:00.000Z',
+    assessmentCompletedDateTime: '2025-11-20T13:00:00.000Z',
+    performedOn: '2025-11-20T12:30:00.000Z',
     performedBy: 'prudhvi.rajan',
     programName: 'Behavioral Health Integration',
     eligibilityPath: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
@@ -92,8 +92,8 @@ export const mockActivitySummary: ScriptSummary[] = [
     submissionId: 'SUB-2023-008',
     assessmentName: 'SDOH Screening',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2023-12-15T11:00:00.000Z',
-    performedOn: '2023-12-15T10:30:00.000Z',
+    assessmentCompletedDateTime: '2025-12-15T11:00:00.000Z',
+    performedOn: '2025-12-15T10:30:00.000Z',
     performedBy: 'prudhvi.rajan',
     programName: 'Care Coordination',
     eligibilityPath: 'Ambetter Health (AMB) >> California (CA) >> Ambetter Enhanced Care Silver (SLV)',
@@ -105,13 +105,13 @@ export const mockActivitySummary: ScriptSummary[] = [
   },
 ]
 
-// Full submission detail — /v2/Assessment/Submission/SUB-2024-001
+// Full submission detail - /v2/Assessment/Submission/SUB-2024-001
 export const mockAssessmentSubmissions: Record<string, AssessmentSubmission> = {
   'SUB-2024-001': {
     submissionId: 'SUB-2024-001',
     assessmentName: 'Health Risk Assessment (HRA)',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2024-02-14T14:30:00.000Z',
+    assessmentCompletedDateTime: '2026-02-14T14:30:00.000Z',
     performedBy: 'prudhvi.rajan',
     contactType: 'Phone',
     actualDuration: 35,
@@ -161,7 +161,7 @@ export const mockAssessmentSubmissions: Record<string, AssessmentSubmission> = {
     submissionId: 'SUB-2024-002',
     assessmentName: 'Adult LTSS Reassessment',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2024-01-10T10:15:00.000Z',
+    assessmentCompletedDateTime: '2026-01-10T10:15:00.000Z',
     performedBy: 'prudhvi.rajan',
     contactType: 'In Person',
     actualDuration: 45,
@@ -195,7 +195,7 @@ export const mockAssessmentSubmissions: Record<string, AssessmentSubmission> = {
     submissionId: 'SUB-2023-012',
     assessmentName: 'PHQ-9 Depression Screening',
     assessmentStatus: 'Completed',
-    assessmentCompletedDateTime: '2023-11-20T13:00:00.000Z',
+    assessmentCompletedDateTime: '2025-11-20T13:00:00.000Z',
     performedBy: 'prudhvi.rajan',
     contactType: 'Phone',
     actualDuration: 20,

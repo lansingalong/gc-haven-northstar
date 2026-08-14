@@ -58,7 +58,14 @@
   padding: 18px 20px 16px 18px;
   width: calc(100% + 40px);
   background: transparent;
+  border: none;
   border-bottom: 1px solid var(--color-divider, rgba(0,0,0,0.1));
+  outline: none;
+}
+
+.cardHeader:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }
 
 .cardHeaderCollapsed {
@@ -223,9 +230,9 @@
 .badgeNeutral    { background: var(--color-action-hover); color: var(--color-text-secondary); }
 .badgeInProgress { background: var(--color-info-light); color: var(--color-primary); }
 .badgePending    { background: var(--color-bg-secondary); color: var(--color-text-secondary); }
-.badgeWarning    { background: var(--color-warning-light); color: var(--color-warning); }
-.badgeHigh       { background: var(--color-error-light); color: var(--color-error); }
-.badgeNew        { background: var(--color-info-light); color: var(--color-info); }
+.badgeWarning    { background: var(--color-warning-light); color: var(--color-warning-dark); }
+.badgeHigh       { background: var(--color-error-light); color: var(--color-error-dark); }
+.badgeNew        { background: var(--color-info-light); color: var(--color-info-dark); }
 
 /* ── Score chip (assessments) ── */
 .scoreChip {
@@ -237,8 +244,8 @@
 }
 
 .scoreGood   { background: var(--color-success-light); color: var(--color-success); }
-.scoreMedium { background: var(--color-warning-light); color: var(--color-warning); }
-.scoreHigh   { background: var(--color-error-light); color: var(--color-error); }
+.scoreMedium { background: var(--color-warning-light); color: var(--color-warning-dark); }
+.scoreHigh   { background: var(--color-error-light); color: var(--color-error-dark); }
 
 /* ── Footer note ── */
 .footerNote {
@@ -423,15 +430,31 @@
 
 .driverRow:first-child { border-top: none; padding-top: 0; }
 
+.driverRowNew {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0 8px 9px;
+  border-top: 1px solid rgba(2, 136, 209, 0.12);
+  border-left: 3px solid var(--color-info);
+  background: rgba(2, 136, 209, 0.04);
+  margin-left: -12px;
+  padding-left: 9px;
+}
+
+.driverRowNew:first-child { border-top: none; }
+
 .driverBody { flex: 1; }
 
 .driverTitle {
+  display: block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
 }
 
 .driverDetail {
+  display: block;
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   margin-top: 1px;
@@ -482,7 +505,7 @@
 
 .activityDue {
   font-size: var(--font-size-xs);
-  color: var(--color-warning);
+  color: var(--color-warning-dark);
   font-weight: var(--font-weight-medium);
 }
 
@@ -533,6 +556,75 @@
 .medTdStrike {
   color: var(--color-text-secondary);
   text-decoration: line-through;
+}
+
+/* ── Medication change highlight rows ── */
+.medTrNew > .medTd {
+  background: rgba(2, 136, 209, 0.04);
+  border-top-color: rgba(2, 136, 209, 0.1);
+}
+.medTrNew > .medTd:first-child {
+  border-left: 3px solid var(--color-info);
+  padding-left: 9px;
+}
+
+.medTrChanged > .medTd {
+  background: rgba(237, 108, 2, 0.06);
+}
+.medTrChanged .medTd {
+  border-top-color: rgba(237, 108, 2, 0.12);
+}
+
+.medTrDiscRecent > .medTd {
+  background: rgba(237, 108, 2, 0.05);
+}
+
+/* ── Medication change inline badges ── */
+.medBadgeNew {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-info);
+  background: var(--color-info-light);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.medBadgeChanged {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-warning-dark);
+  background: rgba(237, 108, 2, 0.1);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.medBadgeDisc {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.medSwitchedFrom {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  font-style: italic;
 }
 
 .editInputSm {

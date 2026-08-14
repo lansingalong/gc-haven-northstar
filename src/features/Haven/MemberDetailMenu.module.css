@@ -1,17 +1,14 @@
-/* Haven — MemberDetailMenu */
-
+/* Haven — MemberDetailMenu (popover style) */
 
 .menu {
   width: 100%;
-  background: var(--color-bg-default);
-  border-radius: var(--radius-sm);
+  background: none;
   overflow: hidden;
-  box-shadow: none;
-  animation: slideUp 140ms ease-out both;
+  animation: fadeIn 120ms ease-out both;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(6px); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -19,8 +16,9 @@
 .item {
   display: flex;
   align-items: center;
+  gap: var(--spacing-2);
   width: 100%;
-  padding: 16px 18px;
+  padding: 10px 16px;
   background: none;
   border: none;
   border-top: 1px solid var(--color-divider);
@@ -34,18 +32,18 @@
 }
 
 .item:hover {
-  background: var(--color-action-selected);
+  background: var(--color-action-hover);
 }
 
 .item:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
-  background: var(--color-action-selected);
+  background: var(--color-action-hover);
 }
 
 .itemLabel {
   font-family: var(--font-family-base);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
   color: var(--color-text-primary);
   line-height: var(--line-height-body);

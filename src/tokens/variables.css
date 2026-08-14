@@ -7,18 +7,18 @@
   --font-family-base: 'Roboto', system-ui, sans-serif;
   --font-family-mono: 'Roboto Mono', monospace;
 
-  --font-size-xs: 11px;
-  --font-size-sm: 13px;
-  --font-size-md: 14px;
-  --font-size-xl: 20px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 15px;
+  --font-size-xl: 21px;
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
 
-  --line-height-xs: 16px;
-  --line-height-sm: 20px;
-  --line-height-md: 20px;
-  --line-height-xl: 28px;
+  --line-height-xs: 17px;
+  --line-height-sm: 21px;
+  --line-height-md: 21px;
+  --line-height-xl: 29px;
 
   /* ── Colors — Brand ── */
   --color-primary: #005d9f;
@@ -34,10 +34,13 @@
 
   /* ── Colors — Semantic ── */
   --color-error: #d32f2f;
+  --color-error-dark: #9b1c1c;
   --color-error-light: #fdecea;
   --color-warning: #ed6c02;
+  --color-warning-dark: #92400e;
   --color-warning-light: #fff4e5;
   --color-info: #0288d1;
+  --color-info-dark: #01579b;
   --color-info-light: #e5f6fd;
   --color-success: #2e7d32;
   --color-success-light: #edf7ed;
@@ -85,8 +88,8 @@
   --spacing-12: 48px;
 
   /* ── Extended typography (Haven) ── */
-  --font-size-h4: 23px;
-  --font-size-h6: 16px;
+  --font-size-h4: 24px;
+  --font-size-h6: 17px;
   --line-height-body: 1.5;
 
   /* ── Extended colors (Haven) ── */

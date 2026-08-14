@@ -66,7 +66,7 @@ export function Icon({ name, size = 'md', color, sx, ...rest }: IconProps) {
   )
 }
 
-/* ── AiAssistant — branded AI assistant icon ── */
+/* ── AiAssistant - branded AI assistant icon ── */
 export interface AiAssistantProps {
   filled?: boolean
   size?: IconSize

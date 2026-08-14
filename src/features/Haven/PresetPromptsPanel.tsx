@@ -30,6 +30,7 @@ function getCategories(firstName: string, memberId: string) {
         "What is this member's last recorded health indicator?",
         "What services is this member eligible for?",
         "What is this member's current medication list?",
+        "What are the member's current goals?",
         ...(MEMBER_DETAIL_EXTRAS[memberId] ?? []),
       ],
     },
@@ -37,6 +38,7 @@ function getCategories(firstName: string, memberId: string) {
       icon: 'Article' as const,
       label: 'Summarize for Me',
       prompts: [
+        'Review Care Plan',
         'Prepare me for a member call',
         "Review member's current care plan",
         'Show me the last update I did for the member',

@@ -1,6 +1,6 @@
 /**
  * Mock data for Gaps In Care
- * Loaded via batch interface (not a direct API call) — source: CarePlans → Guiding Opportunities → Source DD = External quality measures
+ * Loaded via batch interface (not a direct API call) - source: CarePlans → Guiding Opportunities → Source DD = External quality measures
  * Member: Henry Tom Garcia (AH58319473)
  */
 
@@ -27,22 +27,22 @@ export const mockGapsInCare: GapInCare[] = [
     measureCode: 'AWV',
     measureCategory: 'Preventive Care',
     ncqaGrouping: 'Preventive Screening',
-    measureDescription: 'Member has not completed an Annual Wellness Visit in the current measurement year. Last completed March 2023.',
-    identifiedDate: '2024-01-01',
-    updatedOn: '2024-01-01',
+    measureDescription: 'Member has not completed an Annual Wellness Visit in the current measurement year. Last completed March 2025.',
+    identifiedDate: '2026-01-01',
+    updatedOn: '2026-01-01',
     updatedBy: 'batch.interface',
   },
   {
     opportunity: 'Diabetic Eye Exam (Retinal Screening)',
-    opportunityDescription: 'Member has not had a retinal eye exam — required annually for Type 2 Diabetes',
+    opportunityDescription: 'Member has not had a retinal eye exam - required annually for Type 2 Diabetes',
     goal: 'Member will schedule and complete a retinal screening with an ophthalmologist',
     opportunityStatus: 'Open',
     measureCode: 'EED',
     measureCategory: 'Diabetes Management',
-    ncqaGrouping: 'HEDIS — Diabetes',
+    ncqaGrouping: 'HEDIS - Diabetes',
     measureDescription: 'No retinal or dilated eye exam on record. Required annually for members with Type 2 Diabetes.',
-    identifiedDate: '2024-01-01',
-    updatedOn: '2024-01-01',
+    identifiedDate: '2026-01-01',
+    updatedOn: '2026-01-01',
     updatedBy: 'batch.interface',
   },
   {
@@ -52,10 +52,10 @@ export const mockGapsInCare: GapInCare[] = [
     opportunityStatus: 'Open',
     measureCode: 'DSF',
     measureCategory: 'Behavioral Health',
-    ncqaGrouping: 'HEDIS — Behavioral Health',
-    measureDescription: 'PHQ-9 last completed November 2022. Annual re-screening is due.',
-    identifiedDate: '2024-01-01',
-    updatedOn: '2024-01-01',
+    ncqaGrouping: 'HEDIS - Behavioral Health',
+    measureDescription: 'PHQ-9 last completed November 2024. Annual re-screening is due.',
+    identifiedDate: '2026-01-01',
+    updatedOn: '2026-01-01',
     updatedBy: 'batch.interface',
   },
   {
@@ -65,10 +65,10 @@ export const mockGapsInCare: GapInCare[] = [
     opportunityStatus: 'Closed',
     measureCode: 'HBA1C',
     measureCategory: 'Diabetes Management',
-    ncqaGrouping: 'HEDIS — Diabetes',
-    measureDescription: 'HbA1c tested 02/01/2024. Result: 7.8% — above goal but measure fulfilled for current period.',
-    identifiedDate: '2024-01-01',
-    updatedOn: '2024-02-01',
+    ncqaGrouping: 'HEDIS - Diabetes',
+    measureDescription: 'HbA1c tested 02/01/2026. Result: 7.8% - above goal but measure fulfilled for current period.',
+    identifiedDate: '2026-01-01',
+    updatedOn: '2026-02-01',
     updatedBy: 'prudhvi.rajan',
   },
   {
@@ -78,10 +78,10 @@ export const mockGapsInCare: GapInCare[] = [
     opportunityStatus: 'Open',
     measureCode: 'KED',
     measureCategory: 'Diabetes Management',
-    ncqaGrouping: 'HEDIS — Diabetes',
+    ncqaGrouping: 'HEDIS - Diabetes',
     measureDescription: 'Annual urine albumin-to-creatinine ratio (uACR) test not yet completed for current measurement year.',
-    identifiedDate: '2024-01-01',
-    updatedOn: '2024-01-01',
+    identifiedDate: '2026-01-01',
+    updatedOn: '2026-01-01',
     updatedBy: 'batch.interface',
   },
   {
@@ -91,10 +91,10 @@ export const mockGapsInCare: GapInCare[] = [
     opportunityStatus: 'Closed',
     measureCode: 'SPC',
     measureCategory: 'Cardiovascular',
-    ncqaGrouping: 'HEDIS — Cardiovascular',
+    ncqaGrouping: 'HEDIS - Cardiovascular',
     measureDescription: 'Member is currently prescribed Atorvastatin 20mg. Measure fulfilled.',
-    identifiedDate: '2023-01-01',
-    updatedOn: '2024-02-14',
+    identifiedDate: '2025-01-01',
+    updatedOn: '2026-02-14',
     updatedBy: 'prudhvi.rajan',
   },
 ]

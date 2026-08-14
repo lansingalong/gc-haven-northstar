@@ -31,12 +31,12 @@ function CardCopy() {
 }
 
 export function MarcusReferralCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const program = marcusPrograms.find(p => p.status === 'Active') ?? marcusPrograms[0]
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="PersonAdd" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Referral Overview</span>
@@ -73,13 +73,13 @@ export function MarcusReferralCard({ onPrompt }: { onPrompt: (text: string) => v
 }
 
 export function MarcusEligibilityCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const [programsOpen, setProgramsOpen] = useState(false)
   const elig = marcusEligibility.eligibilities[0]
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="VerifiedUser" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Eligibility Overview</span>
@@ -136,12 +136,12 @@ export function MarcusEligibilityCard({ onPrompt }: { onPrompt: (text: string) =
   )
 }
 
-export function MarcusClaimsCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+export function MarcusClaimsCard({ onPrompt, defaultOpen = false }: { onPrompt: (text: string) => void; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="Receipt" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Claims Overview</span>
@@ -223,7 +223,7 @@ export function MarcusNotesCard({ onPrompt }: { onPrompt: (text: string) => void
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="StickyNote2" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Notes</span>
@@ -235,7 +235,7 @@ export function MarcusNotesCard({ onPrompt }: { onPrompt: (text: string) => void
         </button>
 
         {open && (
-          <div className={styles.contactEntry}>
+          <div className={styles.contactEntry} style={{ borderTop: 'none', paddingTop: 0 }}>
             <div className={styles.contactBody}>
               <div className={styles.contactMetaRow}>
                 <span className={styles.contactDate}>07/16/2026</span>
@@ -255,8 +255,8 @@ export function MarcusNotesCard({ onPrompt }: { onPrompt: (text: string) => void
   )
 }
 
-export function MarcusMedicationsCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(false)
+export function MarcusMedicationsCard({ onPrompt, defaultOpen = true }: { onPrompt: (text: string) => void; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const meds = [
     { name: 'Metformin', dosage: '1000mg', frequency: 'Twice daily', startDate: '2023-05-01', dispensedDate: '2026-02-20', prescribedBy: 'Dr. Kim' },
     { name: 'Amlodipine', dosage: '5mg', frequency: 'Once daily', startDate: '2022-08-15', dispensedDate: '2026-02-20', prescribedBy: 'Dr. Kim' },
@@ -267,7 +267,7 @@ export function MarcusMedicationsCard({ onPrompt }: { onPrompt: (text: string) =
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="Medication" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Medications Overview</span>
@@ -328,7 +328,7 @@ export function MarcusDiagnosesCard({ onPrompt }: { onPrompt: (text: string) => 
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="LocalHospital" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Diagnoses & Conditions</span>
@@ -388,7 +388,7 @@ export function MarcusRiskScoreCard({ onPrompt, defaultOpen = false }: { onPromp
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="MonitorHeart" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Risk Score Overview</span>
@@ -446,15 +446,15 @@ export function MarcusRiskScoreCard({ onPrompt, defaultOpen = false }: { onPromp
   )
 }
 
-export function MarcusContactInfoCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+export function MarcusContactInfoCard({ onPrompt, defaultOpen = false }: { onPrompt: (text: string) => void; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const preferred = marcusMemberDetail.phones.find(p => p.isPreferred)
   const other = marcusMemberDetail.phones.find(p => !p.isPreferred)
   const addr = marcusMemberDetail.addresses.find(a => a.isPrimary)
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="ContactPhone" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Member Contact Info</span>
@@ -509,13 +509,13 @@ export function MarcusContactInfoCard({ onPrompt }: { onPrompt: (text: string) =
 }
 
 export function MarcusGapsInCareCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const openGaps = marcusGapsInCare.filter(g => g.opportunityStatus === 'Open')
   const closedGaps = marcusGapsInCare.filter(g => g.opportunityStatus !== 'Open')
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="Healing" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Gaps in Care</span>
@@ -558,11 +558,11 @@ export function MarcusGapsInCareCard({ onPrompt }: { onPrompt: (text: string) =>
 }
 
 export function MarcusAssessmentsCard({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="Assignment" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Assessments</span>
@@ -619,7 +619,7 @@ export function MarcusProgramEligibilityCard({ onPrompt }: { onPrompt: (text: st
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="PlaylistAddCheck" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>Program Eligibility</span>
@@ -660,7 +660,7 @@ export function MarcusERVisitsCard({ onPrompt }: { onPrompt: (text: string) => v
   return (
     <div className={open ? styles.cardExpanded : styles.card}>
       <div className={`${styles.cardInner} ${open ? '' : styles.cardInnerCollapsed}`}>
-        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        <button type="button" className={`${styles.cardHeader} ${open ? '' : styles.cardHeaderCollapsed}`} onClick={() => setOpen(o => !o)} aria-expanded={open} style={{ background: 'none', cursor: 'pointer', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Icon name="LocalHospital" size="sm" color="primary" aria-hidden />
             <span className={styles.cardTitle}>ER Visits & Hospitalizations</span>

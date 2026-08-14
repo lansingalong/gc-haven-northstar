@@ -288,6 +288,9 @@
 /* ── Window container ── */
 .window {
   position: fixed;
+  /* Position is driven entirely by transform: translate() — useLayoutEffect sets it before first paint */
+  left: 0;
+  top: 0;
   z-index: 900;
   display: flex;
   flex-direction: column;
@@ -428,11 +431,11 @@
   z-index: 10;
 }
 
-.resizeN  { top: 0;    left: 8px;  right: 8px;  height: 4px; cursor: n-resize;  }
-.resizeS  { bottom: 0; left: 8px;  right: 8px;  height: 4px; cursor: s-resize;  }
-.resizeE  { right: 0;  top: 8px;   bottom: 8px; width: 4px;  cursor: e-resize;  }
-.resizeW  { left: 0;   top: 8px;   bottom: 8px; width: 4px;  cursor: w-resize;  }
-.resizeNE { top: 0;    right: 0;   width: 8px;  height: 8px; cursor: ne-resize; }
-.resizeNW { top: 0;    left: 0;    width: 8px;  height: 8px; cursor: nw-resize; }
-.resizeSE { bottom: 0; right: 0;   width: 8px;  height: 8px; cursor: se-resize; }
-.resizeSW { bottom: 0; left: 0;    width: 8px;  height: 8px; cursor: sw-resize; }
+.resizeN  { top: -3px;    left: 12px; right: 12px; height: 8px;  cursor: n-resize;  }
+.resizeS  { bottom: -3px; left: 12px; right: 12px; height: 8px;  cursor: s-resize;  }
+.resizeE  { right: -3px;  top: 12px;  bottom: 12px; width: 8px;  cursor: e-resize;  }
+.resizeW  { left: -3px;   top: 12px;  bottom: 12px; width: 8px;  cursor: w-resize;  }
+.resizeNE { top: -3px;    right: -3px;  width: 16px; height: 16px; cursor: ne-resize; }
+.resizeNW { top: -3px;    left: -3px;   width: 16px; height: 16px; cursor: nw-resize; }
+.resizeSE { bottom: -3px; right: -3px;  width: 16px; height: 16px; cursor: se-resize; }
+.resizeSW { bottom: -3px; left: -3px;   width: 16px; height: 16px; cursor: sw-resize; }

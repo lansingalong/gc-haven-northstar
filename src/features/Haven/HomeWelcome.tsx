@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '@/components/Icons'
 import { Typography } from '@/components'
-import { AddActivityModal, type ActivityConfig } from './AddActivityModal'
 import { AddMedicationModal } from './AddMedicationModal'
-import { MarcusClaimsCard, MarcusReferralCard, MarcusEligibilityCard, MarcusNotesCard, MarcusMedicationsCard, MarcusDiagnosesCard, MarcusRiskScoreCard, MarcusContactInfoCard, MarcusGapsInCareCard, MarcusAssessmentsCard, MarcusERVisitsCard } from './ReferralReviewCards'
+import { AddActivityModal } from './AddActivityModal'
+import { MarcusClaimsCard, MarcusReferralCard, MarcusEligibilityCard, MarcusNotesCard, MarcusMedicationsCard, MarcusDiagnosesCard, MarcusContactInfoCard, MarcusGapsInCareCard, MarcusAssessmentsCard, MarcusERVisitsCard } from './ReferralReviewCards'
 import styles from './HomeWelcome.module.css'
 import chatStyles from './ChatMessages.module.css'
 import { MessageFeedbackBar } from './ChatMessages'
@@ -11,7 +11,64 @@ import { MessageFeedbackBar } from './ChatMessages'
 export interface HomeWelcomeProps {
   onPrompt: (text: string) => void
   onPresetsClick: () => void
-  day?: 0 | 1 | 2 | 3 | 4 | 'intake'
+  day?: 1 | 4 | 'intake'
+}
+
+// Active caseload members (full profile available)
+const ACTIVE_MEMBERS = [
+  { id: 'jackson-thomas',  name: 'Jackson Thomas',  condition: 'Type 2 Diabetes, Hypertension' },
+  { id: 'maria-rivera',    name: 'Maria Rivera',    condition: 'Heart Failure, CKD Stage III' },
+  { id: 'marcus-webb',     name: 'Marcus Webb',     condition: 'COPD, Prediabetes' },
+  { id: 'sarah-williams',  name: 'Sarah Williams',  condition: 'Multiple Sclerosis, Depression' },
+  { id: 'james-oconnor',   name: "James O'Connor",  condition: 'CHF, Atrial Fibrillation' },
+  { id: 'dorothy-nguyen',  name: 'Dorothy Nguyen',  condition: 'Heart Failure, Hypertension' },
+  { id: 'marcus-bell',     name: 'Marcus Bell',     condition: 'Type 2 Diabetes' },
+  { id: 'raymond-okafor',  name: 'Raymond Okafor',  condition: 'Asthma, Hypertension' },
+  { id: 'theresa-walcott', name: 'Theresa Walcott', condition: 'Obesity, Hypertension' },
+]
+
+function MyMembersPanel() {
+  const [open, setOpen] = useState(false)
+  // Derive at render time so INTAKE_MEMBERS is available
+  const intakeRows = INTAKE_MEMBERS.map(m => ({ id: m.memberId, name: m.name, condition: m.condition }))
+  const allMembers = [...ACTIVE_MEMBERS, ...intakeRows]
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeaderRow}>
+        <button
+          className={styles.cardHeader}
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+        >
+          <Icon name="Group" size="sm" color="primary" />
+          <span className={styles.cardTitle}>My Members</span>
+          <span className={styles.noteMeta} style={{ marginLeft: 4 }}>{allMembers.length} members</span>
+          <Icon name={open ? 'ExpandLess' : 'ExpandMore'} size="sm" color="action" />
+        </button>
+      </div>
+      {open && (
+        <div className={styles.actionList}>
+          {allMembers.map(m => (
+            <div key={m.id} className={styles.actionRowStatic}>
+              <Icon name="Person" size="sm" color="action" />
+              <div className={styles.taskRowContent}>
+                <button
+                  className={styles.alertMember}
+                  type="button"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', color: 'inherit', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}
+                  onClick={() => window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId: m.id, memberName: m.name }, '*')}
+                >
+                  {m.name}
+                </button>
+                <span className={styles.taskRowDetail}>{m.condition}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 interface Alert {
@@ -196,237 +253,231 @@ function Day0({ onPrompt }: { onPrompt: (text: string) => void }) {
   )
 }
 
-function Day1({ onPrompt }: { onPrompt: (text: string) => void }) {
-  const [checked, setChecked] = useState<Set<string>>(new Set())
-  const [automated, setAutomated] = useState<Set<string>>(new Set())
-  const [running, setRunning] = useState<Set<string>>(new Set())
-  const [completed, setCompleted] = useState<Set<string>>(new Set())
-  const [allDone, setAllDone] = useState(false)
-  const [openModal, setOpenModal] = useState<Alert | null>(null)
-  const [selectedActions, setSelectedActions] = useState<Record<string, Set<string>>>({})
+// Unified priority row type
+interface PriorityRow {
+  key: string
+  memberId: string
+  memberName: string
+  dotClass: 'error' | 'warning' | 'low'
+  label: string          // condition or alert label
+  badge: string          // due/urgency badge text
+  context: string        // ~80 char one-liner
+  expandDetail: string   // full reasoning/detail+action
+  isAlert: boolean
+}
 
-  function toggle(id: string) {
-    setChecked(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
+function buildPriorityList(): PriorityRow[] {
+  // Alert members, ordered: maria-er, maria-gap, jackson-rx, jackson-hra, sarah-hra
+  const alertRows: PriorityRow[] = ALERTS.map(a => ({
+    key: a.id,
+    memberId: a.memberId,
+    memberName: a.member,
+    dotClass: a.severity,
+    label: a.label,
+    badge: a.label === 'ER Visit' ? 'ER Visit' : a.label === 'Assessment Overdue' ? 'Assessment Overdue' : a.label,
+    context: a.detail.length > 80 ? a.detail.slice(0, 77) + '…' : a.detail,
+    expandDetail: `${a.detail}\n\nRecommended action: ${a.action}`,
+    isAlert: true,
+  }))
+
+  // Intake members sorted: overdue first, then high/medium/low each by daysUntilDue asc
+  const sortIntake = (members: IntakeMember[]) => [...members].sort((a, b) => a.daysUntilDue - b.daysUntilDue)
+  const overdue = INTAKE_MEMBERS.filter(m => m.daysUntilDue <= 0)
+  const high    = INTAKE_MEMBERS.filter(m => m.riskLevel === 'high'   && m.daysUntilDue > 0)
+  const medium  = INTAKE_MEMBERS.filter(m => m.riskLevel === 'medium' && m.daysUntilDue > 0)
+  const low     = INTAKE_MEMBERS.filter(m => m.riskLevel === 'low'    && m.daysUntilDue > 0)
+
+  const intakeRows: PriorityRow[] = [
+    ...sortIntake(overdue),
+    ...sortIntake(high),
+    ...sortIntake(medium),
+    ...sortIntake(low),
+  ].map(m => {
+    const dotClass: 'error' | 'warning' | 'low' =
+      m.riskLevel === 'high' ? 'error' : m.riskLevel === 'medium' ? 'warning' : 'low'
+    const badge = m.daysUntilDue <= 0 ? 'Overdue' : `Due in ${m.daysUntilDue}d`
+    const firstSentence = m.reasoning.split('.')[0]
+    const ctx = firstSentence.length > 80 ? firstSentence.slice(0, 77) + '…' : firstSentence
+    return {
+      key: m.id,
+      memberId: m.memberId,
+      memberName: m.name,
+      dotClass,
+      label: m.condition,
+      badge,
+      context: ctx,
+      expandDetail: m.reasoning,
+      isAlert: false,
+    }
+  })
+
+  return [...alertRows, ...intakeRows]
+}
+
+function CaseloadPriorityCard() {
+  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const rows = buildPriorityList()
+
+  function navigate(memberId: string, memberName: string) {
+    window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId, memberName }, '*')
   }
-
-  function handleAutomate() {
-    const queue = ALERTS.filter(a => a.automate && checked.has(a.id))
-    if (queue.length === 0) return
-    setChecked(prev => { const next = new Set(prev); queue.forEach(a => next.delete(a.id)); return next })
-    setRunning(new Set(queue.map(a => a.id)))
-    setCompleted(new Set())
-    setAllDone(false)
-    queue.forEach((a, i) => {
-      setTimeout(() => {
-        setRunning(prev => { const next = new Set(prev); next.delete(a.id); return next })
-        setCompleted(prev => { const next = new Set(prev); next.add(a.id); return next })
-        if (i === queue.length - 1) {
-          setTimeout(() => {
-            setAllDone(true)
-            setAutomated(prev => { const next = new Set(prev); queue.forEach(q => next.add(q.id)); return next })
-          }, 400)
-        }
-      }, (i + 1) * 1200)
-    })
-  }
-
-  const uncheckedAlerts = ALERTS.filter(a => !checked.has(a.id) && !automated.has(a.id))
-  function addAll() { setChecked(new Set(uncheckedAlerts.map(a => a.id))) }
-
-  const automateQueue = ALERTS.filter(a => a.automate && checked.has(a.id))
-  const reviewQueue = ALERTS.filter(a => !a.automate && checked.has(a.id))
-  const automatedItems = ALERTS.filter(a => automated.has(a.id))
 
   return (
-    <>
-    <div className={styles.cards}>
-      <Card icon="NotificationImportant" iconColor="error" title="Needs your attention">
-        {Array.from(new Set(ALERTS.map(a => a.member))).map(member => {
-          const memberAlerts = ALERTS.filter(a => a.member === member)
-          return (
-            <div key={member} className={styles.memberGroup}>
-              <div className={styles.memberGroupHeader}>
-                <Icon name="Person" size="sm" color="action" />
-                <span className={styles.alertMember}>{member}</span>
-              </div>
-              {memberAlerts.map(a => {
-                const isChecked = checked.has(a.id)
-                const isDone = automated.has(a.id)
-                return (
-                  <div key={a.id} className={`${styles.alertItem} ${isDone ? styles.alertItemDone : ''}`}>
-                    <div className={styles.alertRow}>
-                      <span className={`${styles.alertDot} ${styles[a.severity]}`} aria-hidden="true" />
-                      <span className={styles.actionText}>
-                        <span className={styles.alertLabel}>{a.label}</span>
-                        <span className={styles.alertDetail}> - {a.detail}</span>
-                      </span>
-                    </div>
-                    {a.secondAction ? (
-                      <div className={styles.radioGroup} role="group" aria-label={`Action for ${a.label}`}>
-                        {[a.secondAction, a.action].map(option => {
-                          const selected = selectedActions[a.id]?.has(option) ?? false
-                          const isAutomateOption = option === a.action
-                          return (
-                            <div key={option} className={styles.radioOptionWrap}>
-                              <label className={`${styles.radioOption} ${selected ? styles.radioOptionSelected : ''} ${isDone ? styles.radioOptionDone : ''}`}>
-                                <input
-                                  type="checkbox"
-                                  value={option}
-                                  checked={selected}
-                                  disabled={isDone}
-                                  onChange={() => {
-                                    const cur = new Set(selectedActions[a.id] ?? [])
-                                    cur.has(option) ? cur.delete(option) : cur.add(option)
-                                    setSelectedActions(prev => ({ ...prev, [a.id]: cur }))
-                                    if (cur.size > 0 && !checked.has(a.id)) toggle(a.id)
-                                    if (cur.size === 0 && checked.has(a.id)) toggle(a.id)
-                                  }}
-                                  className={styles.radioInputHidden}
-                                />
-                                <Icon name={selected ? 'CheckBox' : 'CheckBoxOutlineBlank'} size="sm" color={selected ? 'primary' : 'action'} />
-                                {option}
-                              </label>
-                              {isAutomateOption && a.note && selected && (
-                                <p className={styles.alertNote}>{a.note}</p>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <button
-                        className={`${styles.alertAction} ${isChecked ? styles.alertActionChecked : ''}`}
-                        type="button"
-                        onClick={() => toggle(a.id)}
-                        aria-pressed={isChecked}
-                        disabled={isDone}
-                      >
-                        <Icon name={isDone || isChecked ? 'CheckBox' : 'CheckBoxOutlineBlank'} size="sm" color={isDone || isChecked ? 'primary' : 'action'} />
-                        {a.action}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
+    <Card icon="FormatListNumbered" iconColor="primary" title="Caseload Priority" defaultOpen={true}>
+      {rows.map(row => {
+        const isExpanded = expandedKey === row.key
+        return (
+          <div key={row.key} className={styles.priorityRow}>
+            <div className={styles.priorityRowMain}>
+              <span className={`${styles.alertDot} ${styles[row.dotClass]}`} aria-hidden="true" />
+              <button
+                className={styles.priorityMemberBtn}
+                type="button"
+                onClick={() => navigate(row.memberId, row.memberName)}
+              >
+                {row.memberName}
+              </button>
+              <span className={styles.priorityLabel}>{row.label}</span>
+              <span className={`${styles.priorityBadge} ${styles['badge_' + row.dotClass]}`}>{row.badge}</span>
+              <button
+                className={styles.priorityExpandBtn}
+                type="button"
+                onClick={() => setExpandedKey(isExpanded ? null : row.key)}
+                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                aria-expanded={isExpanded}
+              >
+                <Icon name={isExpanded ? 'ExpandLess' : 'ExpandMore'} size="sm" color="action" />
+              </button>
             </div>
-          )
-        })}
-
-        {uncheckedAlerts.length > 0 && (
-          <div className={styles.addAllRow}>
-            <button className={styles.addAllBtn} type="button" onClick={addAll}>Add all</button>
+            <p className={styles.priorityContext}>{row.context}</p>
+            {isExpanded && (
+              <div className={styles.priorityDetail}>
+                <p className={styles.priorityDetailText}>{row.expandDetail}</p>
+                <button
+                  className={styles.priorityViewProfile}
+                  type="button"
+                  onClick={() => navigate(row.memberId, row.memberName)}
+                >
+                  View profile
+                  <Icon name="OpenInNew" size="xs" color="primary" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        )
+      })}
+    </Card>
+  )
+}
 
-        {(automateQueue.length > 0 || running.size > 0 || completed.size > 0) && !allDone && (
-          <div className={styles.queueSection}>
-            <div className={styles.queueHeader}>
-              <Icon name="AutoAwesome" size="sm" color="primary" />
-              <span className={styles.queueTitle}>Tasks ({automateQueue.length + running.size + completed.size})</span>
-              {automateQueue.length > 0 && running.size === 0 && (
-                <button className={styles.automateAllBtn} type="button" onClick={handleAutomate}>
-                  <Icon name="PlayArrow" size="sm" color="inverse" />
-                  Run Tasks
+function MemberAlertCard({ member, memberId, alerts }: {
+  member: string
+  memberId: string
+  alerts: Alert[]
+}) {
+  const [done, setDone] = useState<Record<string, boolean>>({})
+  const [openModal, setOpenModal] = useState<string | null>(null)
+
+  function markDone(id: string) {
+    setDone(prev => ({ ...prev, [id]: true }))
+    setOpenModal(null)
+  }
+
+  function navigate() {
+    window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId, memberName: member }, '*')
+  }
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeaderRow}>
+        <div className={styles.cardHeader} style={{ cursor: 'default' }}>
+          <Icon name="NotificationImportant" size="sm" color="error" />
+          <button
+            className={styles.memberCardNameBtn}
+            type="button"
+            onClick={navigate}
+          >
+            {member}
+          </button>
+        </div>
+      </div>
+      <div className={styles.actionList}>
+        {alerts.map((a, idx) => (
+          <div key={a.id} className={`${styles.priorityAlertRow} ${idx < alerts.length - 1 ? styles.priorityAlertRowDivider : ''}`}>
+            <div className={styles.priorityAlertMeta}>
+              <span className={`${styles.alertDot} ${styles[a.severity]}`} aria-hidden="true" />
+              <span className={styles.alertLabel}>{a.label}</span>
+              <span className={styles.alertDetail}> — {a.detail}</span>
+            </div>
+            <div className={styles.priorityTaskRow}>
+              {done[a.id] ? (
+                <>
+                  <Icon name="CheckCircle" size="xs" color="success" aria-hidden />
+                  <span className={styles.priorityTaskDone}>{a.action}</span>
+                  <button type="button" className={styles.priorityEditLink} onClick={() => setOpenModal(a.id)}>Edit</button>
+                </>
+              ) : (
+                <button type="button" className={styles.priorityTaskLink} onClick={() => setOpenModal(a.id)}>
+                  {a.action}
                 </button>
               )}
             </div>
-            <div className={styles.queueItems}>
-              {[...automateQueue, ...ALERTS.filter(a => running.has(a.id) || (completed.has(a.id) && !automated.has(a.id)))].map(a => {
-                const isRunning = running.has(a.id)
-                const isDone = completed.has(a.id)
-                return (
-                  <div key={a.id} className={`${styles.queueItem} ${isDone ? styles.queueItemDone : ''}`}>
-                    {isRunning ? (
-                      <span className={styles.queueItemSpinner} aria-label="Running" />
-                    ) : isDone ? (
-                      <Icon name="CheckCircle" size="sm" color="primary" />
-                    ) : (
-                      <button className={styles.queueItemCheck} type="button" onClick={() => toggle(a.id)} aria-label={`Remove ${a.action} from task list`}>
-                        <Icon name="CheckBox" size="sm" color="primary" />
-                      </button>
-                    )}
-                    <div className={styles.queueItemText}>
-                      <span className={styles.queueMember}>{a.member}</span>
-                      <span className={`${styles.queueAction} ${isRunning ? styles.queueActionRunning : ''}`}>
-                        {selectedActions[a.id]?.size ? Array.from(selectedActions[a.id]).join(' + ') : a.action}
-                      </span>
-                      {(selectedActions[a.id]?.has('Outreach with Sage') || a.action === 'Outreach with Sage') && (
-                        <>
-                          <span className={styles.sageStepsLabel}>Sage will perform these actions:</span>
-                          <ul className={styles.sageSteps}>
-                            <li>Sage will call member using phone number on file.</li>
-                            <li>Sage will give assessment to member on your behalf.</li>
-                            <li>Sage will pick up answers and insights based on what member says.</li>
-                            <li>You will get a notification after Sage is done with member call and see information.</li>
-                          </ul>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
           </div>
-        )}
+        ))}
+      </div>
 
-        {allDone && (
-          <div className={styles.allDoneBanner}>
-            <Icon name="CheckCircle" size="sm" color="primary" />
-            <span>Complete!</span>
-          </div>
-        )}
-
-        {reviewQueue.length > 0 && (
-          <div className={styles.queueSection}>
-            <div className={`${styles.queueHeader} ${styles.queueHeaderReview}`}>
-              <Icon name="PersonSearch" size="sm" color="action" />
-              <span className={styles.queueTitle}>Requires your review ({reviewQueue.length})</span>
-            </div>
-            <div className={styles.queueItems}>
-              {reviewQueue.map(a => (
-                <div key={a.id} className={styles.queueItem}>
-                  <button className={styles.queueItemCheck} type="button" onClick={() => toggle(a.id)} aria-label={`Remove ${a.action} from review list`}>
-                    <Icon name="CheckBox" size="sm" color="primary" />
-                  </button>
-                  <div className={styles.queueItemText}>
-                    <span className={styles.queueMember}>{a.member}</span>
-                    {a.medicationLink ? (
-                      <button className={styles.medicationLink} type="button" onClick={() => navigateToMedications(a.memberId)}>
-                        {a.action}
-                        <Icon name="OpenInNew" size="sm" color="primary" />
-                      </button>
-                    ) : (
-                      <span className={styles.queueAction}>{a.action}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {automatedItems.length > 0 && (
-          <div className={styles.automatedBanner}>
-            <Icon name="CheckCircle" size="sm" color="primary" />
-            <span>{automatedItems.length} task{automatedItems.length > 1 ? 's' : ''} being handled by Haven</span>
-          </div>
-        )}
-      </Card>
+      {/* Modals */}
+      {alerts.map(a => {
+        if (openModal !== a.id) return null
+        if (a.id === 'maria-gap') {
+          return (
+            <AddMedicationModal
+              key={a.id}
+              memberName={member}
+              dob="03/15/1958"
+              memberId="AH58319473"
+              onClose={() => setOpenModal(null)}
+              onComplete={() => markDone(a.id)}
+            />
+          )
+        }
+        return (
+          <AddActivityModal
+            key={a.id}
+            memberName={member}
+            config={{
+              title: 'Add Activity',
+              activityType: a.id === 'jackson-hra' || a.id === 'sarah-hra' ? 'Outreach' : 'Follow-up',
+              contactType: 'Phone',
+              scheduledDate: '08/07/2026',
+            }}
+            onClose={() => setOpenModal(null)}
+            onAdd={() => markDone(a.id)}
+          />
+        )
+      })}
     </div>
+  )
+}
 
-    {openModal && (
-      <AddActivityModal
-        config={{ title: 'Add Activity', activityType: 'Follow-up', contactType: 'Member - Phone', scheduledDate: '' } as ActivityConfig}
-        memberName={openModal.member}
-        onClose={() => setOpenModal(null)}
-        onAdd={() => setOpenModal(null)}
-      />
-    )}
-    </>
+function Day1({ onPrompt }: { onPrompt: (text: string) => void }) {
+  const members = Array.from(new Set(ALERTS.map(a => a.member)))
+
+  return (
+    <div className={styles.cards}>
+      {members.map(member => {
+        const memberAlerts = ALERTS.filter(a => a.member === member)
+        const memberId = memberAlerts[0].memberId
+        return (
+          <MemberAlertCard
+            key={member}
+            member={member}
+            memberId={memberId}
+            alerts={memberAlerts}
+          />
+        )
+      })}
+    </div>
   )
 }
 
@@ -820,16 +871,13 @@ const RISK_BG: Record<IntakeMember['riskLevel'], string> = {
 
 function MonthlyIntake() {
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [intakeOpen, setIntakeOpen] = useState(false)
   const [sageSelected, setSageSelected] = useState<Set<string>>(new Set())
   const [sageRunning, setSageRunning] = useState<Set<string>>(new Set())
   const [sageDone, setSageDone] = useState<Set<string>>(new Set())
   const [sageAllDone, setSageAllDone] = useState(false)
 
-  const [actSelected, setActSelected] = useState<Set<string>>(new Set())
-  const [actRunning, setActRunning] = useState<Set<string>>(new Set())
+  const [openModal, setOpenModal] = useState<string | null>(null)
   const [actDone, setActDone] = useState<Set<string>>(new Set())
-  const [actAllDone, setActAllDone] = useState(false)
 
   const sortByDue = (a: IntakeMember, b: IntakeMember) => a.daysUntilDue - b.daysUntilDue
 
@@ -863,35 +911,6 @@ function MonthlyIntake() {
     })
   }
 
-  function toggleAct(id: string) {
-    if (actRunning.has(id) || actDone.has(id)) return
-    setActSelected(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
-  function runAct() {
-    const queue = [...grouped.high, ...grouped.medium, ...grouped.low].filter(m => actSelected.has(m.id) && !actDone.has(m.id)).map(m => m.id)
-    if (!queue.length) return
-    setActSelected(new Set())
-    setActRunning(new Set(queue))
-    setActAllDone(false)
-    queue.forEach((id, i) => {
-      setTimeout(() => {
-        setActRunning(prev => { const next = new Set(prev); next.delete(id); return next })
-        setActDone(prev => { const next = new Set(prev); next.add(id); return next })
-        if (i === queue.length - 1) setTimeout(() => setActAllDone(true), 400)
-      }, (i + 1) * 1200)
-    })
-  }
-
-  const allMembers = [...grouped.high, ...grouped.medium, ...grouped.low]
-  const actQueue = allMembers.filter(m => actSelected.has(m.id))
-  const actRunningList = allMembers.filter(m => actRunning.has(m.id))
-  const actDoneList = allMembers.filter(m => actDone.has(m.id) && !actAllDone)
-  const actQueueVisible = actQueue.length > 0 || actRunning.size > 0 || actDoneList.length > 0
 
   const sageQueue = grouped.low.filter(m => sageSelected.has(m.id))
   const sageRunningList = grouped.low.filter(m => sageRunning.has(m.id))
@@ -899,265 +918,224 @@ function MonthlyIntake() {
   const queueVisible = sageQueue.length > 0 || sageRunning.size > 0 || sageDoneList.length > 0
 
   return (
-    <div className={styles.cards}>
-      <Card icon="TaskAlt" iconColor="primary" title="Today's Tasks">
-        <button
-          className={styles.intakeTaskRow}
-          type="button"
-          onClick={() => setIntakeOpen(o => !o)}
-          aria-expanded={intakeOpen}
-        >
-          <div className={styles.intakeTaskLeft}>
-            <div className={styles.intakeTaskTitle}>Member Intake</div>
-            <div className={styles.intakeTaskMeta}>
-              Haven has reviewed {INTAKE_MEMBERS.length} members, ready for your review
-            </div>
-          </div>
-          <div className={styles.intakeTaskRight}>
-            <Icon name={intakeOpen ? 'ExpandLess' : 'ExpandMore'} size="sm" color="action" />
-          </div>
-        </button>
+    <div className={styles.intakeWorkspace}>
+      {/* Workspace header */}
+      <p style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', lineHeight: 'var(--line-height-body)', margin: '0 0 12px', padding: '0 4px' }}>
+        Haven has reviewed {INTAKE_MEMBERS.length} new members for intake. These are ready for your review.
+      </p>
 
-        {intakeOpen && (
-          <div className={styles.intakePanel}>
-            {/* Header bar */}
-            <div className={styles.intakePanelHeader}>
-              <div className={styles.intakePanelMeta}>
-                <Icon name="AutoAwesome" size="sm" color="primary" />
-                <span>Haven draft - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-              </div>
+      {/* Risk groups */}
+      {(['high', 'medium', 'low'] as const).map(level => {
+        const uncheckedInGroup = grouped.low.filter(m => !sageSelected.has(m.id) && !sageDone.has(m.id))
+        const addAllInGroup = () => {
+          setSageSelected(prev => new Set([...prev, ...uncheckedInGroup.map(m => m.id)]))
+        }
+
+        return (
+          <div key={level} className={styles.intakeGroupCard} style={{ background: RISK_BG[level] }}>
+            <div className={styles.intakeGroupCardHeader} style={{ borderLeftColor: RISK_COLORS[level] }}>
+              <span className={styles.intakeGroupLabel} style={{ color: RISK_COLORS[level] }}>
+                {level === 'high' ? 'Outreach needed soon' : level === 'medium' ? 'Outreach this month' : 'Outreach when available'}
+              </span>
+              <span className={styles.intakeGroupCount}>{grouped[level].length} members</span>
             </div>
 
-            {/* Groups */}
-            {(['high', 'medium', 'low'] as const).map(level => {
-              const uncheckedInGroup = level === 'low'
-                ? grouped.low.filter(m => !sageSelected.has(m.id) && !sageDone.has(m.id))
-                : grouped[level].filter(m => !actSelected.has(m.id) && !actDone.has(m.id))
-              const addAllInGroup = () => {
-                if (level === 'low') {
-                  setSageSelected(prev => new Set([...prev, ...uncheckedInGroup.map(m => m.id)]))
-                } else {
-                  setActSelected(prev => new Set([...prev, ...uncheckedInGroup.map(m => m.id)]))
-                }
-              }
+            {grouped[level].map(m => {
+              const isExpanded = expanded === m.id
+              const isSageChecked = sageSelected.has(m.id)
+              const isSageDone = sageDone.has(m.id)
+              const isActDone = actDone.has(m.id)
+              const rowDone = isSageDone
               return (
-              <div key={level} className={styles.intakeGroup} style={{ background: RISK_BG[level] }}>
-                <div className={styles.intakeGroupHeader} style={{ borderLeftColor: RISK_COLORS[level] }}>
-                  <span className={styles.intakeGroupLabel} style={{ color: RISK_COLORS[level] }}>
-                    {level === 'high' ? 'Outreach needed soon' : level === 'medium' ? 'Outreach this month' : 'Outreach when available'}
-                  </span>
-                  <span className={styles.intakeGroupCount}>{grouped[level].length} members</span>
-                </div>
+                <div key={m.id} className={`${styles.intakeMemberRow} ${rowDone ? styles.intakeRowDone : ''}`}>
+                  {/* Member header row */}
+                  <div className={styles.intakeMemberRowHeader}>
+                    <span className={styles.intakeRiskDot} style={{ background: RISK_COLORS[m.riskLevel] }} aria-hidden="true" />
+                    <button
+                      className={styles.intakeMemberNameBtn}
+                      type="button"
+                      onClick={() => window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId: m.memberId, memberName: m.name }, '*')}
+                    >
+                      {m.name}
+                    </button>
+                    <span className={styles.intakeConditionInline}>{m.condition}</span>
+                    <span className={styles.intakeDueBadge} style={{ color: RISK_COLORS[m.riskLevel], background: RISK_BG[m.riskLevel] }}>
+                      {m.daysUntilDue <= 0 ? 'Overdue' : m.daysUntilDue === 1 ? 'Due today' : `${m.daysUntilDue}d left`}
+                    </span>
+                    <button
+                      className={styles.intakeExpandBtn}
+                      type="button"
+                      onClick={() => setExpanded(isExpanded ? null : m.id)}
+                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                      aria-expanded={isExpanded}
+                    >
+                      <Icon name={isExpanded ? 'ExpandLess' : 'ExpandMore'} size="sm" color="action" />
+                    </button>
+                  </div>
 
-                {grouped[level].map(m => {
-                  const isExpanded = expanded === m.id
-                  const isSageChecked = sageSelected.has(m.id)
-                  const isSageDone = sageDone.has(m.id)
-                  const isActChecked = actSelected.has(m.id)
-                  const isActDone = actDone.has(m.id)
-                  const rowDone = isSageDone || isActDone
-                  return (
-                    <div key={m.id} className={`${styles.memberGroup} ${rowDone ? styles.intakeRowDone : ''}`}>
-                      {/* Member header row — colored Person icon + name + condition + due badge + expand */}
-                      <div className={styles.memberGroupHeader}>
-                        <Icon name="Person" size="sm" sx={{ color: RISK_COLORS[m.riskLevel] }} />
-                        <span className={styles.alertMember}>{m.name}</span>
-                        <span className={styles.intakeConditionInline}>{m.condition}</span>
-                        <span className={styles.intakeDueBadge} style={{ color: RISK_COLORS[m.riskLevel], background: RISK_BG[m.riskLevel] }}>
-                          {m.daysUntilDue <= 1 ? 'Due today' : `${m.daysUntilDue}d left`}
-                        </span>
-                        <button
-                          className={styles.intakeExpandBtn}
-                          type="button"
-                          onClick={() => setExpanded(isExpanded ? null : m.id)}
-                          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                        >
-                          <Icon name={isExpanded ? 'ExpandLess' : 'ExpandMore'} size="sm" color="action" />
-                        </button>
+                  {/* Action buttons */}
+                  <div className={styles.intakeMemberActions}>
+                    {level === 'low' && (
+                      <button
+                        className={`${styles.alertAction} ${styles.alertActionWrap} ${isSageChecked ? styles.alertActionChecked : ''}`}
+                        type="button"
+                        onClick={() => toggleSage(m.id)}
+                        aria-pressed={isSageChecked}
+                        disabled={isSageDone || sageRunning.has(m.id)}
+                      >
+                        <Icon
+                          name={isSageDone ? 'CheckCircle' : isSageChecked ? 'CheckBox' : 'CheckBoxOutlineBlank'}
+                          size="sm"
+                          color={isSageDone || isSageChecked ? 'primary' : 'action'}
+                        />
+                        Outreach with Sage
+                      </button>
+                    )}
+
+                    {isActDone ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Icon name="CheckCircle" size="xs" color="success" aria-hidden />
+                        <span className={styles.priorityTaskDone}>Add activity to call {m.name} to take assessment</span>
+                        <button type="button" className={styles.priorityEditLink} onClick={() => setOpenModal(m.id)}>Edit</button>
+                      </span>
+                    ) : (
+                      <button
+                        className={styles.priorityTaskLink}
+                        type="button"
+                        onClick={() => setOpenModal(m.id)}
+                      >
+                        Add activity to call {m.name} to take assessment
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div className={styles.intakeRowDetail}>
+                      <p className={styles.intakeSnapshotText}>{m.snapshot}</p>
+
+                      {/* Reasoning layers */}
+                      <div className={styles.intakeLayersGrid}>
+                        <div className={styles.intakeLayerRow}>
+                          <span className={styles.intakeLayerRowLabel}>Assessment:</span>
+                          <span className={styles.intakeLayerRowText}>{m.layers.assessment.length > 120 ? m.layers.assessment.slice(0, 117) + '…' : m.layers.assessment}</span>
+                        </div>
+                        <div className={styles.intakeLayerRow}>
+                          <span className={styles.intakeLayerRowLabel}>SDOH:</span>
+                          <span className={styles.intakeLayerRowText}>{m.layers.sdoh.length > 120 ? m.layers.sdoh.slice(0, 117) + '…' : m.layers.sdoh}</span>
+                        </div>
                       </div>
 
-                      <div className={styles.alertItem}>
-
-                        {level === 'low' && (
-                          <button
-                            className={`${styles.alertAction} ${styles.alertActionWrap} ${isSageChecked ? styles.alertActionChecked : ''}`}
-                            type="button"
-                            onClick={() => toggleSage(m.id)}
-                            aria-pressed={isSageChecked}
-                            disabled={isSageDone || sageRunning.has(m.id)}
-                          >
-                            <Icon
-                              name={isSageDone ? 'CheckCircle' : isSageChecked ? 'CheckBox' : 'CheckBoxOutlineBlank'}
-                              size="sm"
-                              color={isSageDone || isSageChecked ? 'primary' : 'action'}
-                            />
-                            Outreach with Sage
-                          </button>
-                        )}
-
+                      <div className={styles.intakeMemberMeta}>
+                        <span>DOB {m.dob}</span>
+                        <span>{m.plan}</span>
                         <button
-                          className={`${styles.alertAction} ${styles.alertActionWrap} ${isActChecked ? styles.alertActionChecked : ''}`}
+                          className={styles.intakeProfileLink}
                           type="button"
-                          onClick={() => toggleAct(m.id)}
-                          aria-pressed={isActChecked}
-                          disabled={isActDone || actRunning.has(m.id)}
+                          onClick={() => window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId: m.memberId, memberName: m.name }, '*')}
                         >
-                          <Icon
-                            name={isActDone ? 'CheckCircle' : isActChecked ? 'CheckBox' : 'CheckBoxOutlineBlank'}
-                            size="sm"
-                            color={isActDone || isActChecked ? 'primary' : 'action'}
-                          />
-                          Add activity to call {m.name} to take assessment
+                          View profile
+                          <Icon name="OpenInNew" size="xs" color="primary" />
                         </button>
-
-                        {isExpanded && (
-                          <div className={styles.intakeRowDetail}>
-                            <p className={styles.intakeSnapshotText}>{m.snapshot}</p>
-                            <div className={styles.intakeMemberMeta}>
-                              <span>DOB {m.dob}</span>
-                              <span>{m.plan}</span>
-                              <button
-                                className={styles.intakeProfileLink}
-                                type="button"
-                                onClick={() => window.parent.postMessage({ type: 'MEMBER_SWITCH', memberId: m.memberId, memberName: m.name }, '*')}
-                              >
-                                View profile
-                                <Icon name="OpenInNew" size="xs" color="primary" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  )
-                })}
-
-                {uncheckedInGroup.length > 0 && (
-                  <div className={`${styles.addAllRow} ${styles.addAllRowSection}`}>
-                    <button className={styles.addAllBtn} type="button" onClick={addAllInGroup}>Add all</button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
               )
             })}
 
-            {/* Sage queue */}
-            {queueVisible && (
-              <div className={styles.queueSection}>
-                <div className={styles.queueHeader}>
-                  <Icon name="AutoAwesome" size="sm" color="primary" />
-                  <span className={styles.queueTitle}>Task List ({sageQueue.length + sageRunning.size + sageDoneList.length})</span>
-                  {sageQueue.length > 0 && sageRunning.size === 0 && (
-                    <button className={styles.automateAllBtn} type="button" onClick={runSage}>
-                      <Icon name="PlayArrow" size="sm" color="inverse" />
-                      Run Tasks
-                    </button>
-                  )}
-                </div>
-                <div className={styles.queueItems}>
-                  {[...sageQueue, ...sageRunningList, ...sageDoneList].map(m => {
-                    const isRunning = sageRunning.has(m.id)
-                    const isDone = sageDone.has(m.id)
-                    return (
-                      <div key={m.id} className={`${styles.queueItem} ${isDone ? styles.queueItemDone : ''}`}>
-                        {isRunning ? (
-                          <span className={styles.queueItemSpinner} aria-label="Running" />
-                        ) : isDone ? (
-                          <Icon name="CheckCircle" size="sm" color="primary" />
-                        ) : (
-                          <button className={styles.queueItemCheck} type="button" onClick={() => toggleSage(m.id)} aria-label={`Remove ${m.name} from queue`}>
-                            <Icon name="CheckBox" size="sm" color="primary" />
-                          </button>
-                        )}
-                        <div className={styles.queueItemText}>
-                          <span className={styles.queueMember}>{m.name}</span>
-                          <span className={`${styles.queueAction} ${isRunning ? styles.queueActionRunning : ''}`}>
-                            Outreach with Sage
-                          </span>
-                          <span className={styles.sageStepsLabel}>Sage will perform these actions:</span>
-                          <ul className={styles.sageSteps}>
-                            <li>Sage will call member using phone number on file.</li>
-                            <li>Sage will give assessment to member on your behalf.</li>
-                            <li>Sage will pick up answers and insights based on what member says.</li>
-                            <li>You will get a notification after Sage is done with member call and see information.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {sageAllDone && (
-              <div className={styles.allDoneBanner}>
-                <Icon name="CheckCircle" size="sm" color="primary" />
-                <span>Complete!</span>
-              </div>
-            )}
-
-            {/* Activity queue */}
-            {actQueueVisible && (
-              <div className={styles.queueSection}>
-                <div className={styles.queueHeader}>
-                  <Icon name="TaskAlt" size="sm" color="primary" />
-                  <span className={styles.queueTitle}>Tasks ({actQueue.length + actRunning.size + actDoneList.length})</span>
-                  {actQueue.length > 0 && actRunning.size === 0 && (
-                    <button className={styles.automateAllBtn} type="button" onClick={runAct}>
-                      <Icon name="PlayArrow" size="sm" color="inverse" />
-                      Run Tasks
-                    </button>
-                  )}
-                </div>
-                <div className={styles.queueItems}>
-                  {[...actQueue, ...actRunningList, ...actDoneList].map(m => {
-                    const isRunning = actRunning.has(m.id)
-                    const isDone = actDone.has(m.id)
-                    return (
-                      <div key={m.id} className={`${styles.queueItem} ${isDone ? styles.queueItemDone : ''}`}>
-                        {isRunning ? (
-                          <span className={styles.queueItemSpinner} aria-label="Running" />
-                        ) : isDone ? (
-                          <Icon name="CheckCircle" size="sm" color="primary" />
-                        ) : (
-                          <button className={styles.queueItemCheck} type="button" onClick={() => toggleAct(m.id)} aria-label={`Remove ${m.name} from queue`}>
-                            <Icon name="CheckBox" size="sm" color="primary" />
-                          </button>
-                        )}
-                        <div className={styles.queueItemText}>
-                          <span className={styles.queueMember}>{m.name}</span>
-                          <span className={`${styles.queueAction} ${isRunning ? styles.queueActionRunning : ''}`}>
-                            Add activity to call {m.name} to take assessment
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {actAllDone && (
-              <div className={styles.allDoneBanner}>
-                <Icon name="CheckCircle" size="sm" color="primary" />
-                <span>Complete!</span>
+            {level === 'low' && uncheckedInGroup.length > 0 && (
+              <div className={`${styles.addAllRow} ${styles.addAllRowSection}`}>
+                <button className={styles.addAllBtn} type="button" onClick={addAllInGroup}>Add all</button>
               </div>
             )}
           </div>
-        )}
-      </Card>
+        )
+      })}
+
+      {/* Sage queue */}
+      {queueVisible && (
+        <div className={styles.card}>
+          <div className={styles.queueSection}>
+            <div className={styles.queueHeader}>
+              <Icon name="AutoAwesome" size="sm" color="primary" />
+              <span className={styles.queueTitle}>Task List ({sageQueue.length + sageRunning.size + sageDoneList.length})</span>
+              {sageQueue.length > 0 && sageRunning.size === 0 && (
+                <button className={styles.automateAllBtn} type="button" onClick={runSage}>
+                  <Icon name="PlayArrow" size="sm" color="inverse" />
+                  Run Tasks
+                </button>
+              )}
+            </div>
+            <div className={styles.queueItems}>
+              {[...sageQueue, ...sageRunningList, ...sageDoneList].map(m => {
+                const isRunning = sageRunning.has(m.id)
+                const isDone = sageDone.has(m.id)
+                return (
+                  <div key={m.id} className={`${styles.queueItem} ${isDone ? styles.queueItemDone : ''}`}>
+                    {isRunning ? (
+                      <span className={styles.queueItemSpinner} aria-label="Running" />
+                    ) : isDone ? (
+                      <Icon name="CheckCircle" size="sm" color="primary" />
+                    ) : (
+                      <button className={styles.queueItemCheck} type="button" onClick={() => toggleSage(m.id)} aria-label={`Remove ${m.name} from queue`}>
+                        <Icon name="CheckBox" size="sm" color="primary" />
+                      </button>
+                    )}
+                    <div className={styles.queueItemText}>
+                      <span className={styles.queueMember}>{m.name}</span>
+                      <span className={`${styles.queueAction} ${isRunning ? styles.queueActionRunning : ''}`}>
+                        Outreach with Sage
+                      </span>
+                      <span className={styles.sageStepsLabel}>Sage will perform these actions:</span>
+                      <ul className={styles.sageSteps}>
+                        <li>Sage will call member using phone number on file.</li>
+                        <li>Sage will give assessment to member on your behalf.</li>
+                        <li>Sage will pick up answers and insights based on what member says.</li>
+                        <li>You will get a notification after Sage is done with member call and see information.</li>
+                      </ul>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sageAllDone && (
+        <div className={styles.allDoneBanner}>
+          <Icon name="CheckCircle" size="sm" color="primary" />
+          <span>Complete!</span>
+        </div>
+      )}
+
+      {/* AddActivity modals */}
+      {[...grouped.high, ...grouped.medium, ...grouped.low].map(m => {
+        if (openModal !== m.id) return null
+        return (
+          <AddActivityModal
+            key={m.id}
+            memberName={m.name}
+            config={{
+              title: 'Add Activity',
+              activityType: 'Call member',
+              contactType: 'Member - Phone',
+              scheduledDate: '08/10/2026',
+            }}
+            onClose={() => setOpenModal(null)}
+            onAdd={() => setActDone(prev => new Set([...prev, m.id]))}
+          />
+        )
+      })}
     </div>
   )
 }
 
-export function HomeWelcome({ onPrompt, day = 0 }: HomeWelcomeProps) {
+export function HomeWelcome({ onPrompt, day = 1 }: HomeWelcomeProps) {
   return (
     <div className={styles.root}>
-      <Typography variant="h4">Welcome back, Beatrice</Typography>
-      {day === 0 && <Day0 onPrompt={onPrompt} />}
       {day === 1 && <Day1 onPrompt={onPrompt} />}
-      {day === 2 && <Day2 onPrompt={onPrompt} />}
-      {day === 3 && <Day3 onPrompt={onPrompt} />}
       {day === 4 && <Day4 onPrompt={onPrompt} />}
       {day === 'intake' && <MonthlyIntake />}
     </div>
@@ -1441,14 +1419,15 @@ function MariaInsights({ onPrompt }: { onPrompt: (text: string) => void }) {
 
 export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (text: string) => void }) {
   const [expanded, setExpanded] = useState(false)
-  const [showFirstPrompt, setShowFirstPrompt] = useState(true)
-  const [showReviewChips, setShowReviewChips] = useState(false)
-  const [showPrepCards, setShowPrepCards] = useState(false)
-  const [selectedFirstChip, setSelectedFirstChip] = useState<string | null>(null)
-  const [showERCard, setShowERCard] = useState(false)
-  const [showRiskCard, setShowRiskCard] = useState(false)
-  const [showReassignPanel, setShowReassignPanel] = useState(false)
+  const [selectedOptions, setSelectedOptions] = useState<Array<'review' | 'prep' | 'reassign'>>([])
+  const [reviewItems, setReviewItems] = useState<Array<'er' | 'risk'>>([])
+  const [reassignMode, setReassignMode] = useState<'direct' | 'queue'>('direct')
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const addOption = (opt: 'review' | 'prep' | 'reassign') =>
+    setSelectedOptions(prev => prev.includes(opt) ? prev : [...prev, opt])
+  const addReviewItem = (item: 'er' | 'risk') =>
+    setReviewItems(prev => prev.includes(item) ? prev : [...prev, item])
 
   const summaryContent = `Member: Marcus Webb (AH36582091)\nReferral: Chronic Disease Management — referred by Sandra Ortiz, Care Coordinator\nEligibility: Blue Shield PPO Silver · Commercial · Active 01/01/2026\nDiagnoses: Type 2 Diabetes Mellitus (primary, E11.9), Essential Hypertension (I10), Hyperlipidemia (E78.5), Obesity (E66.09)\nMedications: Metformin 1000mg, Amlodipine 5mg, Atorvastatin 40mg, CPAP therapy\nNotes: Per Sandra Ortiz (07/16/2026) — member engaged, eating habits slipped due to new role, motivated to lower A1C before September lab draw. Possible stress factors (work, teenager). May be interested in digital care management. Wife Jennifer manages scheduling. Best reached after 5pm on cell.`
 
@@ -1456,16 +1435,16 @@ export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (tex
 
   const reviewContent = (() => {
     const parts = [summaryContent, '\nReview details:']
-    if (showERCard) parts.push('ER Visits & Hospitalizations: 0 ER visits, 0 hospitalizations in past 12 months. Last acute episode: None. Recent visits: 01/14/2026 Urgent Care — Upper respiratory infection (evaluated and treated, no hospitalization); 08/22/2025 Primary Care — Routine follow-up, A1C and BP check.')
-    if (showRiskCard) parts.push('Risk Score: 52/100 · Tier 2 · Moderate risk. Drivers: Type 2 Diabetes Mellitus (A1C 7.2%, active monitoring needed), Essential Hypertension (controlled on Amlodipine), Obesity (BMI elevated, sedentary work schedule).')
+    if (reviewItems.includes('er')) parts.push('ER Visits & Hospitalizations: 0 ER visits, 0 hospitalizations in past 12 months. Last acute episode: None. Recent visits: 01/14/2026 Urgent Care — Upper respiratory infection (evaluated and treated, no hospitalization); 08/22/2025 Primary Care — Routine follow-up, A1C and BP check.')
+    if (reviewItems.includes('risk')) parts.push('Risk Score: 52/100 · Tier 2 · Moderate risk. Drivers: Type 2 Diabetes Mellitus (A1C 7.2%, active monitoring needed), Essential Hypertension (controlled on Amlodipine), Obesity (BMI elevated, sedentary work schedule).')
     return parts.join('\n')
   })()
 
   useEffect(() => {
-    if (selectedFirstChip || showERCard || showRiskCard) {
+    if (selectedOptions.length > 0 || reviewItems.length > 0) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [selectedFirstChip, showPrepCards, showReviewChips, showERCard, showRiskCard])
+  }, [selectedOptions, reviewItems])
 
   return (
     <div className={styles.cards}>
@@ -1476,11 +1455,10 @@ export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (tex
         <button
           type="button"
           className={styles.taskCardHeader}
-          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 10 }}
+          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: expanded ? '12px 0 10px' : '12px 14px 10px', display: 'flex', alignItems: 'center', gap: 10 }}
           onClick={() => setExpanded(e => !e)}
           aria-expanded={expanded}
         >
-          <span className={styles.taskCardDot} style={{ background: 'var(--color-primary)' }} aria-hidden="true" />
           <div className={styles.taskCardMeta}>
             <span className={styles.taskCardTitle}>Review Referral</span>
             <span className={styles.taskCardSub}>New Member, July 15, 2026</span>
@@ -1502,7 +1480,6 @@ export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (tex
           <MarcusEligibilityCard onPrompt={_onPrompt} />
           <MarcusNotesCard onPrompt={_onPrompt} />
           <MarcusMedicationsCard onPrompt={_onPrompt} />
-          <MarcusDiagnosesCard onPrompt={_onPrompt} />
 
           {/* Layer 1: What would you like to do? — feedback bar ends this reply */}
           <div className={chatStyles.assistantGroup} style={{ marginTop: 16 }}>
@@ -1513,21 +1490,21 @@ export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (tex
               <button
                 type="button"
                 className={chatStyles.followUpChip}
-                onClick={() => { setShowFirstPrompt(false); setShowReviewChips(true); setShowPrepCards(false); setSelectedFirstChip('Review more information') }}
+                onClick={() => addOption('review')}
               >
                 Review more information
               </button>
               <button
                 type="button"
                 className={chatStyles.followUpChip}
-                onClick={() => { setShowFirstPrompt(false); setSelectedFirstChip('Prep me for a call'); setShowPrepCards(true); setShowReviewChips(false) }}
+                onClick={() => addOption('prep')}
               >
                 Prep me for a call
               </button>
               <button
                 type="button"
                 className={chatStyles.followUpChip}
-                onClick={() => { setShowFirstPrompt(false); setSelectedFirstChip('Reassign referral'); setShowReassignPanel(true); setShowPrepCards(false); setShowReviewChips(false) }}
+                onClick={() => addOption('reassign')}
               >
                 Reassign referral
               </button>
@@ -1535,161 +1512,137 @@ export function MarcusNewMemberWelcome({ onPrompt: _onPrompt }: { onPrompt: (tex
             <MessageFeedbackBar memberId="marcus-webb" content={summaryContent} />
           </div>
 
-          {/* Prep me for a call cards */}
-          {showPrepCards && (
-            <>
-              <div className={chatStyles.assistantGroup} style={{ marginTop: 8 }}>
-                <div className={chatStyles.row}>
-                  <div className={chatStyles.assistantBubble}>Here's what you'll want to know before reaching out to Marcus for the first time.</div>
+          {/* Ordered follow-up sections */}
+          {selectedOptions.map(opt => {
+            if (opt === 'prep') return (
+              <React.Fragment key="prep">
+                <div className={chatStyles.assistantGroup} style={{ marginTop: 8 }}>
+                  <div className={chatStyles.row}>
+                    <div className={chatStyles.assistantBubble}>Here's what you'll want to know before reaching out to Marcus for the first time.</div>
+                  </div>
                 </div>
-              </div>
-              <MarcusContactInfoCard onPrompt={_onPrompt} />
-              <MarcusGapsInCareCard onPrompt={_onPrompt} />
-              <MarcusAssessmentsCard onPrompt={_onPrompt} />
-              <MessageFeedbackBar memberId="marcus-webb" content={prepContent} />
-            </>
-          )}
-
+                <MarcusMedicationsCard onPrompt={_onPrompt} />
+                <MarcusClaimsCard onPrompt={_onPrompt} />
+                <MarcusContactInfoCard onPrompt={_onPrompt} />
+                <MarcusGapsInCareCard onPrompt={_onPrompt} />
+                <MarcusAssessmentsCard onPrompt={_onPrompt} />
+                <MessageFeedbackBar memberId="marcus-webb" content={prepContent} />
+              </React.Fragment>
+            )
+            if (opt === 'reassign') return (
+              <React.Fragment key="reassign">
           {/* Reassign referral panel */}
-          {showReassignPanel && (
             <div className={chatStyles.assistantGroup} style={{ marginTop: 8 }}>
               <div className={chatStyles.row}>
-                <div className={chatStyles.assistantBubble}>Here are care managers available for reassignment. Select one to open GuidingCare and complete the change.</div>
+                <div className={chatStyles.assistantBubble}>How would you like to reassign this referral?</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                {[
-                  {
-                    name: 'Dr. Priya Nair, RN',
-                    role: 'INT: Care Manager',
-                    specialty: 'Chronic Disease Management',
-                    phone: '415-203-8841',
-                    fax: '415-203-8899',
-                    startDate: '03/15/2023',
-                    pcp: 'No',
-                    primary: 'Yes',
-                    premiumProvider: 'No',
-                    releaseOfInfo: 'Yes',
-                    caregiverType: 'N/A',
-                    assignUrl: '#assign-priya-nair',
-                  },
-                  {
-                    name: 'James Holloway, LCSW',
-                    role: 'INT: Behavioral Health Specialist',
-                    specialty: 'Behavioral Health',
-                    phone: '415-774-5520',
-                    fax: '415-774-5599',
-                    startDate: '07/01/2022',
-                    pcp: 'No',
-                    primary: 'No',
-                    premiumProvider: 'No',
-                    releaseOfInfo: 'Yes',
-                    caregiverType: 'N/A',
-                    assignUrl: '#assign-james-holloway',
-                  },
-                  {
-                    name: 'Carmen Vásquez, RN',
-                    role: 'INT: Care Manager',
-                    specialty: 'Complex Care Management',
-                    phone: '415-339-6610',
-                    fax: '415-339-6699',
-                    startDate: '01/10/2021',
-                    pcp: 'No',
-                    primary: 'No',
-                    premiumProvider: 'Yes',
-                    releaseOfInfo: 'Yes',
-                    caregiverType: 'N/A',
-                    assignUrl: '#assign-carmen-vasquez',
-                  },
-                  {
-                    name: 'David Kim, MSW',
-                    role: 'INT: Social Worker',
-                    specialty: 'Health and Wellness',
-                    phone: '415-882-1194',
-                    fax: '415-882-1100',
-                    startDate: '09/05/2023',
-                    pcp: 'No',
-                    primary: 'No',
-                    premiumProvider: 'No',
-                    releaseOfInfo: 'No',
-                    caregiverType: 'N/A',
-                    assignUrl: '#assign-david-kim',
-                  },
-                ].map(cm => (
-                  <div key={cm.name} style={{ background: 'var(--color-surface)', borderLeft: '3px solid var(--color-primary)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                    {/* Header row */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 10 }}>
-                      <div>
-                        <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-md)', fontWeight: 500, color: 'var(--color-text-primary)' }}>{cm.name}</span>
-                        <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', display: 'block', marginTop: 2 }}>{cm.role}</span>
+
+              {/* Option toggle */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 10, background: 'var(--color-primary-light)', padding: '4px', borderRadius: '6px', width: 'fit-content' }}>
+                <button
+                  type="button"
+                  onClick={() => setReassignMode('direct')}
+                  style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-xs)', fontWeight: 500, padding: '5px 16px', borderRadius: '4px', border: 'none', background: reassignMode === 'direct' ? 'var(--color-surface)' : 'transparent', color: reassignMode === 'direct' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', cursor: 'pointer', boxShadow: reassignMode === 'direct' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none', transition: 'all var(--transition-fast)' }}
+                >
+                  Option 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReassignMode('queue')}
+                  style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-xs)', fontWeight: 500, padding: '5px 16px', borderRadius: '4px', border: 'none', background: reassignMode === 'queue' ? 'var(--color-surface)' : 'transparent', color: reassignMode === 'queue' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', cursor: 'pointer', boxShadow: reassignMode === 'queue' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none', transition: 'all var(--transition-fast)' }}
+                >
+                  Option 2
+                </button>
+              </div>
+
+              {/* Option 1: Direct assign */}
+              {reassignMode === 'direct' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                  {[
+                    { name: 'Dr. Priya Nair, RN', role: 'INT: Care Manager', specialty: 'Chronic Disease Management', phone: '415-203-8841', fax: '415-203-8899', startDate: '03/15/2023', pcp: 'No', primary: 'Yes', premiumProvider: 'No', releaseOfInfo: 'Yes', assignUrl: '#assign-priya-nair' },
+                    { name: 'James Holloway, LCSW', role: 'INT: Behavioral Health Specialist', specialty: 'Behavioral Health', phone: '415-774-5520', fax: '415-774-5599', startDate: '07/01/2022', pcp: 'No', primary: 'No', premiumProvider: 'No', releaseOfInfo: 'Yes', assignUrl: '#assign-james-holloway' },
+                    { name: 'Carmen Vásquez, RN', role: 'INT: Care Manager', specialty: 'Complex Care Management', phone: '415-339-6610', fax: '415-339-6699', startDate: '01/10/2021', pcp: 'No', primary: 'No', premiumProvider: 'Yes', releaseOfInfo: 'Yes', assignUrl: '#assign-carmen-vasquez' },
+                    { name: 'David Kim, MSW', role: 'INT: Social Worker', specialty: 'Health and Wellness', phone: '415-882-1194', fax: '415-882-1100', startDate: '09/05/2023', pcp: 'No', primary: 'No', premiumProvider: 'No', releaseOfInfo: 'No', assignUrl: '#assign-david-kim' },
+                  ].map(cm => (
+                    <div key={cm.name} style={{ background: 'var(--color-surface)', borderLeft: '3px solid var(--color-primary)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 10 }}>
+                        <div>
+                          <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-md)', fontWeight: 500, color: 'var(--color-text-primary)' }}>{cm.name}</span>
+                          <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', display: 'block', marginTop: 2 }}>{cm.role}</span>
+                        </div>
+                        <a href={cm.assignUrl} target="_blank" rel="noreferrer" style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-primary)', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0, padding: '4px 10px', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)' }}>
+                          Assign as Primary
+                        </a>
                       </div>
-                      <a
-                        href={cm.assignUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-primary)', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0, padding: '4px 10px', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)' }}
-                      >
-                        Assign as Primary
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 12px', borderTop: '1px solid var(--color-divider)', paddingTop: 10 }}>
+                        {[
+                          { label: 'Specialty', value: cm.specialty },
+                          { label: 'Phone', value: cm.phone },
+                          { label: 'Fax', value: cm.fax },
+                          { label: 'Start Date', value: cm.startDate },
+                          { label: 'PCP', value: cm.pcp },
+                          { label: 'Primary', value: cm.primary },
+                          { label: 'Premium Provider', value: cm.premiumProvider },
+                          { label: 'Release of Info', value: cm.releaseOfInfo },
+                        ].map(f => (
+                          <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>{f.label}</span>
+                            <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>{f.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Option 2: Work queue */}
+              {reassignMode === 'queue' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                  {[
+                    { name: 'Care Coordination', description: 'General care management and coordination needs', url: '#queue-care-coordination' },
+                    { name: 'Complex Care Management', description: 'High-acuity members with multiple chronic conditions', url: '#queue-complex-care' },
+                    { name: 'Transitions of Care', description: 'Post-discharge follow-up and transition support', url: '#queue-transitions' },
+                    { name: 'Utilization Management', description: 'UM review and authorization pending', url: '#queue-um' },
+                    { name: 'Whole Health', description: 'Behavioral health and social determinants of health', url: '#queue-whole-health' },
+                    { name: 'Clinicals Pending', description: 'Awaiting clinical review or nurse assessment', url: '#queue-clinicals' },
+                  ].map(q => (
+                    <div key={q.name} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-divider)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                      <div>
+                        <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-md)', fontWeight: 500, color: 'var(--color-text-primary)', display: 'block' }}>{q.name}</span>
+                        <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>{q.description}</span>
+                      </div>
+                      <a href={q.url} target="_blank" rel="noreferrer" style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-primary)', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0, padding: '4px 10px', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-sm)' }}>
+                        Add to queue →
                       </a>
                     </div>
-                    {/* Details grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 12px', borderTop: '1px solid var(--color-divider)', paddingTop: 10 }}>
-                      {[
-                        { label: 'Specialty', value: cm.specialty },
-                        { label: 'Phone', value: cm.phone },
-                        { label: 'Fax', value: cm.fax },
-                        { label: 'Start Date', value: cm.startDate },
-                        { label: 'PCP', value: cm.pcp },
-                        { label: 'Primary', value: cm.primary },
-                        { label: 'Premium Provider', value: cm.premiumProvider },
-                        { label: 'Release of Info', value: cm.releaseOfInfo },
-                      ].map(f => (
-                        <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>{f.label}</span>
-                          <span style={{ fontFamily: 'var(--font-family-base)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>{f.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+
               <MessageFeedbackBar memberId="marcus-webb" content={summaryContent} />
             </div>
-          )}
-
-          {/* Review topic chips */}
-          {showReviewChips && (
-            <div className={chatStyles.assistantGroup} style={{ marginTop: 8 }}>
-              <div className={chatStyles.row}>
-                <div className={chatStyles.assistantBubble}>What would you like to review?</div>
-              </div>
-              <div className={chatStyles.followUpChips}>
-                <button
-                  type="button"
-                  className={chatStyles.followUpChip}
-                  onClick={() => { setShowERCard(true); setShowRiskCard(false) }}
-                >
-                  ER visits &amp; hospitalizations
-                </button>
-                <button
-                  type="button"
-                  className={chatStyles.followUpChip}
-                  onClick={() => { setShowRiskCard(true); setShowERCard(false) }}
-                >
-                  Risk score breakdown
-                </button>
-                <button
-                  type="button"
-                  className={chatStyles.followUpChip}
-                  onClick={() => { setShowERCard(true); setShowRiskCard(true) }}
-                >
-                  All
-                </button>
-              </div>
-              {showERCard && <MarcusERVisitsCard onPrompt={_onPrompt} />}
-              {showRiskCard && <MarcusRiskScoreCard onPrompt={_onPrompt} defaultOpen />}
-              <MessageFeedbackBar memberId="marcus-webb" content={reviewContent} />
-            </div>
-          )}
+              </React.Fragment>
+            )
+            if (opt === 'review') return (
+              <React.Fragment key="review">
+                <div className={chatStyles.assistantGroup} style={{ marginTop: 8 }}>
+                  <div className={chatStyles.row}>
+                    <div className={chatStyles.assistantBubble}>What would you like to review?</div>
+                  </div>
+                  <div className={chatStyles.followUpChips}>
+                    <button type="button" className={chatStyles.followUpChip} onClick={() => addReviewItem('er')}>ER visits &amp; hospitalizations</button>
+                  </div>
+                  {reviewItems.map(item => item === 'er'
+                    ? <MarcusERVisitsCard key="er" onPrompt={_onPrompt} />
+                    : null
+                  )}
+                  <MessageFeedbackBar memberId="marcus-webb" content={reviewContent} />
+                </div>
+              </React.Fragment>
+            )
+            return null
+          })}
           <div ref={bottomRef} />
         </>
       )}

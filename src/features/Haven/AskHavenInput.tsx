@@ -1,6 +1,6 @@
 import { KeyboardEvent, useRef, useState } from 'react'
 import aiSparkle from '@/assets/ai_sparkle.png'
-import sendIcon from '@/assets/send_icon.png'
+import { Icon } from '@/components/Icons'
 import styles from './AskHavenInput.module.css'
 
 export interface AskHavenInputProps {
@@ -45,7 +45,7 @@ export function AskHavenInput({ onSubmit }: AskHavenInputProps) {
           aria-label="Send"
           disabled={!value.trim()}
         >
-          <img src={sendIcon} width={24} height={24} alt="" aria-hidden="true" />
+          <Icon name="Send" size="md" aria-hidden />
         </button>
       </div>
     </div>

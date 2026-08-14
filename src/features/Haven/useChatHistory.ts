@@ -87,7 +87,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Checked what medications this member is on',
     messages: [
       { id: 's1-u1', role: 'user', content: 'What medications is Jackson currently on?' },
-      { id: 's1-a1', role: 'assistant', content: 'Jackson Thomas is currently prescribed:\n\n• Metformin 500mg – twice daily\n• Lisinopril 10mg – once daily\n• Atorvastatin 20mg – once daily at bedtime\n\nLast medication reconciliation: 03/15/2026.' },
+      { id: 's1-a1', role: 'assistant', content: 'Jackson Thomas is currently prescribed:\n\n• Metformin 500mg - twice daily\n• Lisinopril 10mg - once daily\n• Atorvastatin 20mg - once daily at bedtime\n\nLast medication reconciliation: 03/15/2026.' },
     ],
   },
   {
@@ -125,7 +125,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Went through the care plan and checked in on how things are going',
     messages: [
       { id: 's4-u1', role: 'user', content: "What is Maria's care plan status?" },
-      { id: 's4-a1', role: 'assistant', content: "Maria Rivera's care plan was last updated 04/01/2026.\n\n• Goal: Reduce CHF hospitalizations – In Progress\n• Intervention: Daily weight monitoring – Active\n• Intervention: Cardiologist follow-up 04/22/2026 – Pending\n• Goal: Medication adherence >80% – Partially Met (74%)" },
+      { id: 's4-a1', role: 'assistant', content: "Maria Rivera's care plan was last updated 04/01/2026.\n\n• Goal: Reduce CHF hospitalizations - In Progress\n• Intervention: Daily weight monitoring - Active\n• Intervention: Cardiologist follow-up 04/22/2026 - Pending\n• Goal: Medication adherence >80% - Partially Met (74%)" },
     ],
   },
   {
@@ -137,7 +137,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Looked up what services and programs this member qualifies for',
     messages: [
       { id: 's5-u1', role: 'user', content: "What services is Maria eligible for?" },
-      { id: 's5-a1', role: 'assistant', content: "Based on Maria Rivera's current eligibility, she qualifies for:\n\n• Disease Management Program – Congestive Heart Failure\n• Telephonic Care Management\n• Transportation Assistance (non-emergency medical)\n• Home Health Aide (up to 20 hrs/week)\n• Cardiac Rehabilitation (pending prior auth)" },
+      { id: 's5-a1', role: 'assistant', content: "Based on Maria Rivera's current eligibility, she qualifies for:\n\n• Disease Management Program - Congestive Heart Failure\n• Telephonic Care Management\n• Transportation Assistance (non-emergency medical)\n• Home Health Aide (up to 20 hrs/week)\n• Cardiac Rehabilitation (pending prior auth)" },
     ],
   },
   {
@@ -149,7 +149,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Checked recent hospital visits and ER use',
     messages: [
       { id: 's6-u1', role: 'user', content: 'Has Jackson had any ER visits recently?' },
-      { id: 's6-a1', role: 'assistant', content: 'Jackson Thomas had 2 ED visits in the past 6 months:\n\n• 02/14/2026 – Chief complaint: hyperglycemia. Discharged same day.\n• 11/30/2025 – Chief complaint: chest pain (ruled out cardiac). Admitted overnight, discharged 12/01/2025.' },
+      { id: 's6-a1', role: 'assistant', content: 'Jackson Thomas had 2 ED visits in the past 6 months:\n\n• 02/14/2026 - Chief complaint: hyperglycemia. Discharged same day.\n• 11/30/2025 - Chief complaint: chest pain (ruled out cardiac). Admitted overnight, discharged 12/01/2025.' },
     ],
   },
   {
@@ -161,7 +161,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Went over recent assessments and member responses',
     messages: [
       { id: 's7-u1', role: 'user', content: 'What assessments have been completed for Jackson?' },
-      { id: 's7-a1', role: 'assistant', content: 'The following assessments are on file for Jackson Thomas:\n\n• Health Risk Assessment – Completed 01/10/2026\n• PHQ-9 (Depression Screen) – Score: 6 (mild), completed 01/10/2026\n• Social Determinants of Health (SDOH) – Completed 01/10/2026\n• Diabetes Self-Management Assessment – Completed 11/05/2025' },
+      { id: 's7-a1', role: 'assistant', content: 'The following assessments are on file for Jackson Thomas:\n\n• Health Risk Assessment - Completed 01/10/2026\n• PHQ-9 (Depression Screen) - Score: 6 (mild), completed 01/10/2026\n• Social Determinants of Health (SDOH) - Completed 01/10/2026\n• Diabetes Self-Management Assessment - Completed 11/05/2025' },
     ],
   },
   {
@@ -173,7 +173,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: "Talked through the member's conditions and how they're being managed",
     messages: [
       { id: 's8-u1', role: 'user', content: "What's Jackson's diagnosis history?" },
-      { id: 's8-a1', role: 'assistant', content: "Jackson Thomas's active diagnoses include:\n\n• Type 2 Diabetes Mellitus (E11.9) – Primary, uncontrolled\n• Essential Hypertension (I10)\n• Hyperlipidemia (E78.5)\n• Mild depressive episode (F32.0) – noted on last assessment" },
+      { id: 's8-a1', role: 'assistant', content: "Jackson Thomas's active diagnoses include:\n\n• Type 2 Diabetes Mellitus (E11.9) - Primary, uncontrolled\n• Essential Hypertension (I10)\n• Hyperlipidemia (E78.5)\n• Mild depressive episode (F32.0) - noted on last assessment" },
     ],
   },
   {
@@ -197,7 +197,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Looked up what services and programs this member qualifies for',
     messages: [
       { id: 's10-u1', role: 'user', content: 'Is Jackson enrolled in any disease management programs?' },
-      { id: 's10-a1', role: 'assistant', content: 'Jackson Thomas is currently enrolled in:\n\n• Diabetes Disease Management Program – Active since 09/2025\n• Telephonic Care Management – Active\n\nHe was referred to a Diabetes Self-Management Education (DSME) program in January but has not yet enrolled.' },
+      { id: 's10-a1', role: 'assistant', content: 'Jackson Thomas is currently enrolled in:\n\n• Diabetes Disease Management Program - Active since 09/2025\n• Telephonic Care Management - Active\n\nHe was referred to a Diabetes Self-Management Education (DSME) program in January but has not yet enrolled.' },
     ],
   },
   {
@@ -221,7 +221,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Looked at claims and how often the member is using services',
     messages: [
       { id: 's12-u1', role: 'user', content: 'What are his latest claims?' },
-      { id: 's12-a1', role: 'assistant', content: "Jackson Thomas's most recent claims activity:\n\n• 03/10/2026 – Office visit, PCP (Dr. Sarah Chen) – $180 allowed\n• 02/14/2026 – ED visit, Mercy General – $1,240 allowed\n• 02/08/2026 – Lab (HbA1c, lipid panel) – $95 allowed\n• 01/22/2026 – Pharmacy (Metformin, Lisinopril) – $42 allowed" },
+      { id: 's12-a1', role: 'assistant', content: "Jackson Thomas's most recent claims activity:\n\n• 03/10/2026 - Office visit, PCP (Dr. Sarah Chen) - $180 allowed\n• 02/14/2026 - ED visit, Mercy General - $1,240 allowed\n• 02/08/2026 - Lab (HbA1c, lipid panel) - $95 allowed\n• 01/22/2026 - Pharmacy (Metformin, Lisinopril) - $42 allowed" },
     ],
   },
   {
@@ -245,7 +245,7 @@ const SEED_SESSIONS: ChatSession[] = [
     summary: 'Got a quick summary before an outreach call',
     messages: [
       { id: 's14-u1', role: 'user', content: 'Summarize what I should know before calling Jackson today' },
-      { id: 's14-a1', role: 'assistant', content: "Here's a quick rundown before your call with Jackson Thomas:\n\n• Medium risk (Level 2) – mainly driven by uncontrolled diabetes and recent ED use\n• HbA1c is 7.8% and overdue for a retest\n• Medication adherence is low at 68% – worth checking in on barriers\n• Had an ED visit 02/14 for hyperglycemia – ask how he's been feeling since\n• Not yet enrolled in DSME despite referral – good item to follow up on\n• Care plan goal: reduce ED visits and improve HbA1c by June" },
+      { id: 's14-a1', role: 'assistant', content: "Here's a quick rundown before your call with Jackson Thomas:\n\n• Medium risk (Level 2) - mainly driven by uncontrolled diabetes and recent ED use\n• HbA1c is 7.8% and overdue for a retest\n• Medication adherence is low at 68% - worth checking in on barriers\n• Had an ED visit 02/14 for hyperglycemia - ask how he's been feeling since\n• Not yet enrolled in DSME despite referral - good item to follow up on\n• Care plan goal: reduce ED visits and improve HbA1c by June" },
     ],
   },
 ]
@@ -254,7 +254,7 @@ function loadHistory(): ChatSession[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw !== null) return JSON.parse(raw)
-    // First visit — seed with demo data
+    // First visit - seed with demo data
     localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_SESSIONS))
     return SEED_SESSIONS
   } catch {
@@ -265,7 +265,7 @@ function loadHistory(): ChatSession[] {
 function persistHistory(sessions: ChatSession[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
-  } catch { /* storage quota exceeded — ignore */ }
+  } catch { /* storage quota exceeded - ignore */ }
 }
 
 export function useChatHistory() {

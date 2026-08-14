@@ -24,6 +24,7 @@ interface AddNoteModalProps {
   memberName: string
   memberId?: string
   onClose: () => void
+  onSuccess?: () => void
 }
 
 function formatDateTime(d: Date): string {
@@ -31,7 +32,7 @@ function formatDateTime(d: Date): string {
     ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
-export function AddNoteModal({ initialContent, memberName, memberId, onClose }: AddNoteModalProps) {
+export function AddNoteModal({ initialContent, memberName, memberId, onClose, onSuccess }: AddNoteModalProps) {
   const [noteType, setNoteType] = useState('')
   const [isAlert, setIsAlert] = useState(false)
   const [content, setContent] = useState(initialContent)
@@ -44,6 +45,7 @@ export function AddNoteModal({ initialContent, memberName, memberId, onClose }: 
       window.parent.postMessage({ type: 'MEMBER_SWITCH_TAB', memberId, tab: 'notes' }, '*')
     }
     onClose()
+    onSuccess?.()
   }
 
   return createPortal(

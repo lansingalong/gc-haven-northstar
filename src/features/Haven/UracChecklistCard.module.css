@@ -97,7 +97,7 @@
 
 .badge_partial {
   background: var(--color-warning-light);
-  color: var(--color-warning);
+  color: var(--color-warning-dark);
 }
 
 .badge_none {

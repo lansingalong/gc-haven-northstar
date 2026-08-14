@@ -1,36 +1,36 @@
-import { Avatar, Chip, Typography } from '@/components'
-import { Icon } from '@/components/Icons'
-import memberIcon from '@/assets/member_icon.png'
+import { Chip, Typography } from '@/components'
 import styles from './ChatWelcome.module.css'
 
+const FEATURED_PROMPTS = [
+  "Catch me up on member's care",
+  'Prepare me for a member call',
+  'Help me with admin for this member',
+  "Review member's care plan",
+]
+
 export interface ChatWelcomeProps {
-  onMemberDetails: () => void
-  onSummarizeMenu: () => void
+  onPrompt: (prompt: string) => void
+  onMore: () => void
 }
 
-export function ChatWelcome({ onMemberDetails, onSummarizeMenu }: ChatWelcomeProps) {
+export function ChatWelcome({ onPrompt, onMore }: ChatWelcomeProps) {
   return (
     <div className={styles.root}>
       <Typography variant="h4">Welcome</Typography>
-      <Typography variant="body2">Pick a prompt or ask your own question</Typography>
+      <Typography variant="body2">Start with a common question or ask your own below</Typography>
       <div className={styles.chipRow}>
+        {FEATURED_PROMPTS.map((prompt) => (
+          <Chip
+            key={prompt}
+            label={prompt}
+            onClick={() => onPrompt(prompt)}
+            className={styles.chip}
+          />
+        ))}
         <Chip
-          label="Get member details"
-          onClick={onMemberDetails}
-          avatar={
-            <Avatar size={26}>
-              <img src={memberIcon} width={16} height={16} alt="" aria-hidden="true" />
-            </Avatar>
-          }
-        />
-        <Chip
-          label="Summarize for me"
-          onClick={onSummarizeMenu}
-          avatar={
-            <Avatar size={26}>
-              <Icon name="Article" size="xs" sx={{ color: 'var(--color-icon-navy)' }} />
-            </Avatar>
-          }
+          label="More"
+          onClick={onMore}
+          className={styles.chip}
         />
       </div>
     </div>
